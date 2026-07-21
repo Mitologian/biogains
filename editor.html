@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bio GAINS — Editor Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--red:#CF142B;--ink:#191919;--line:#e4e4e4;--muted:#6E6E6E;--bg:#f4f4f5}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Montserrat',system-ui,sans-serif}
+  body{background:var(--bg);color:var(--ink);padding-bottom:80px}
+  .bar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;flex-wrap:wrap}
+  .bar h1{font-size:15px;font-weight:800}.bar h1 span{color:var(--red)}
+  .bar .r{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:inherit;font-weight:700;font-size:12.5px;border:none;border-radius:9px;padding:9px 14px;cursor:pointer}
+  .btn-p{background:var(--red);color:#fff}.btn-s{background:#eee;color:#333}
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  .hint{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:16px;line-height:1.5}
+  .hint code{background:#f0f0f0;padding:1px 5px;border-radius:4px;font-size:11px}
+  details{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  summary{font-weight:800;font-size:13.5px;padding:13px 15px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+  summary::before{content:"▸";color:var(--red);transition:.2s}details[open] summary::before{transform:rotate(90deg)}
+  .sec{padding:4px 15px 16px}
+  label{display:block;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:12px 0 5px}
+  input,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;background:#fff;resize:vertical}
+  input:focus,textarea:focus{outline:none;border-color:var(--red)}
+  textarea{min-height:64px;line-height:1.5}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .flag{font-size:8px;font-weight:800;color:var(--red);margin-left:4px}
+  .note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+  @media(max-width:560px){.two{grid-template-columns:1fr}}
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20}
+  #toast.on{opacity:1}
+  input[type=file]{font-size:12px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Bio GAINS <span>· Editor Data</span></h1>
+  <div class="r">
+    <label style="margin:0;align-self:center;color:#333;text-transform:none;font-size:11px">Load data.js: <input type="file" id="file" accept=".js,.txt" style="width:auto;border:none;padding:0"></label>
+    <button class="btn-s" onclick="resetDefault()">Reset</button>
+    <button class="btn-p" onclick="download()">⤓ Download data.js</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="hint">Isi form, lalu <b>Download data.js</b> dan taruh di folder app (menimpa yang lama). Draft otomatis tersimpan di browser ini.<br>
+  Untuk semua daftar bertitik (WHO, Good/Bad Referral, keyword, galeri, klien): <b>satu baris = satu bullet</b>. Tekan Enter untuk menambah bullet baru, hapus barisnya untuk mengurangi. Untuk baris berisi beberapa kolom, pisahkan dengan <code>::</code> (urutan sesuai contoh di tiap kotak). Gambar: tulis path, mis. <code>img/hero.jpg</code>.</div>
+
+  <details open><summary>Gambar & Kontak</summary><div class="sec">
+    <label>Cover (potret penuh)</label><input id="img_cover">
+    <label>Hero (banner)</label><input id="img_hero">
+    <label>Nomor WhatsApp <span class="flag">wa.me</span></label><input id="wa"><div class="note">Format internasional tanpa +, mis. 628112060043</div>
+    <label>Bahasa default</label><input id="lang_default" placeholder="id / en">
+  </div></details>
+
+  <details><summary>Hero</summary><div class="sec">
+    <label>Nama</label><input id="h_name">
+    <div class="two"><div><label>Peran (ID)</label><input id="h_role_id"></div><div><label>Role (EN)</label><input id="h_role_en"></div></div>
+    <div class="two"><div><label>Connector (ID)</label><input id="h_con_id"></div><div><label>Connector (EN)</label><input id="h_con_en"></div></div>
+    <div class="two"><div><label>Tagline (ID)</label><input id="h_tag_id"></div><div><label>Tagline (EN)</label><input id="h_tag_en"></div></div>
+    <div class="note">Boleh pakai &lt;em&gt;miring&lt;/em&gt; dan &lt;mark&gt;highlight&lt;/mark&gt;.</div>
+  </div></details>
+
+  <details><summary>Keanggotaan BNI</summary><div class="sec">
+    <label>Chapter</label><input id="bni_chapter">
+    <div class="two"><div><label>Klasifikasi (ID)</label><input id="bni_klas_id"></div><div><label>Classification (EN)</label><input id="bni_klas_en"></div></div>
+    <label>Status (satu per baris)</label><textarea id="bni_status"></textarea>
+    <div class="two"><div><label>Member Sejak (ID)</label><input id="bni_since_id"></div><div><label>Member Since (EN)</label><input id="bni_since_en"></div></div>
+    <div class="two"><div><label>Peran Lain (ID)</label><input id="bni_peran_id"></div><div><label>Other Role (EN)</label><input id="bni_peran_en"></div></div>
+  </div></details>
+
+  <details><summary>Bisnis</summary><div class="sec">
+    <label>Nama</label><input id="b_nama"><label>Legal</label><input id="b_legal">
+    <div class="two"><div><label>What We Do (ID)</label><textarea id="b_lay_id"></textarea></div><div><label>What We Do (EN)</label><textarea id="b_lay_en"></textarea></div></div>
+    <div class="two"><div><label>Pengalaman (ID)</label><input id="b_th_id"></div><div><label>Years (EN)</label><input id="b_th_en"></div></div>
+    <div class="two"><div><label>What We Solve (ID)</label><textarea id="b_solve_id"></textarea></div><div><label>What We Solve (EN)</label><textarea id="b_solve_en"></textarea></div></div>
+    <div class="two"><div><label>Produk (ID)</label><input id="b_prod_id"></div><div><label>Product (EN)</label><input id="b_prod_en"></div></div>
+    <label>Website</label><input id="b_web">
+    <label>Video YouTube (URL, opsional)</label><input id="b_video">
+    <label>Galeri (path, satu per baris)</label><textarea id="b_gallery"></textarea>
+  </div></details>
+
+  <details><summary>Tiers (Meat / Cheese / Bread)</summary><div class="sec" id="tiers_sec"></div></details>
+
+  <details><summary>How to Refer &mdash; WHO</summary><div class="sec">
+    <div class="two"><div><label>Profil WHO (ID) <span class="flag">1 baris = 1 bullet</span></label><textarea id="r_who_id" style="min-height:120px"></textarea></div><div><label>Profile WHO (EN) <span class="flag">1 baris = 1 bullet</span></label><textarea id="r_who_en" style="min-height:120px"></textarea></div></div>
+  </div></details>
+
+  <details><summary>Bio GAINS</summary><div class="sec">
+    <label>Personal <span class="flag">k_id :: k_en :: v_id :: v_en</span></label><textarea id="bg_personal"></textarea>
+    <label>Yang Mendorong Saya <span class="flag">k_id :: k_en :: v_id :: v_en</span></label><textarea id="bg_drive"></textarea>
+    <label>GAINS <span class="flag">huruf :: title_id :: title_en :: desc_id :: desc_en</span></label><textarea id="bg_gains" style="min-height:130px"></textarea>
+    <label>Galeri (path, satu per baris)</label><textarea id="bg_gallery"></textarea>
+  </div></details>
+
+  <details><summary>Contact Sphere</summary><div class="sec">
+    <label>Paling Nyambung <span class="flag">nama_id :: nama_en :: why_id :: why_en</span></label><textarea id="sp_top3" style="min-height:100px"></textarea>
+    <div class="two"><div><label>Lainnya (ID, satu per baris)</label><textarea id="sp_oth_id"></textarea></div><div><label>Others (EN, satu per baris)</label><textarea id="sp_oth_en"></textarea></div></div>
+  </div></details>
+
+  <details><summary>Klien</summary><div class="sec">
+    <label>Top Klien <span class="flag">nama :: src</span></label><textarea id="cl_top" style="min-height:120px"></textarea>
+    <label>Logo (path, satu per baris)</label><textarea id="cl_logos"></textarea>
+    <div class="two"><div><label>Good Referral (ID) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_good_id"></textarea></div><div><label>Good Referral (EN) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_good_en"></textarea></div></div>
+    <div class="two"><div><label>Bad Referral (ID) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_bad_id"></textarea></div><div><label>Bad Referral (EN) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_bad_en"></textarea></div></div>
+  </div></details>
+</div>
+<div id="toast"></div>
+
+<script>
+var DEFAULT={
+ lang_default:"id",
+ images:{cover:"img/cover.jpg",hero:"img/hero.jpg"},
+ contact:{wa:"628112060043"},
+ hero:{name:"Dedy Dahlan",role_id:"Founder Mitologi Inspira",role_en:"Founder, Mitologi Inspira",connector_id:"People Connector",connector_en:"People Connector",tagline_id:"Tim <em>nyambung,</em> Bisnis makin <mark>untung.</mark>",tagline_en:"Teams in <em>sync,</em> business that <mark>wins.</mark>"},
+ bni:{chapter:"BNI GROW · Jakarta Barat",klasifikasi_id:"Leadership, Soft Skills Training & Coaching",klasifikasi_en:"Leadership, Soft Skills Training & Coaching",status:["Gold Club Member","Green Member"],since_id:"Agustus 2024",since_en:"August 2024",peran_id:"Launch Director Consultant · BNI Ventura",peran_en:"Launch Director Consultant · BNI Ventura"},
+ bisnis:{nama:"Mitologi Inspira",legal:"PT. Ansarmedia Edukreasi Semesta",layanan_id:"Membantu perusahaan membangun tim yang kompak dan pemimpin yang kuat, lewat cara belajar yang seru dan nempel.",layanan_en:"We help companies build tight teams and strong leaders, through learning that is fun and sticks.",tahun_id:"15+ tahun",tahun_en:"15+ years",produk_id:"Training, workshop, dan coaching untuk tim dan pemimpin.",produk_en:"Training, workshops, and coaching for teams and leaders.",solve_id:"Tim yang kurang kompak, komunikasi antar divisi berantakan, dan pemimpin baru yang belum siap memimpin.",solve_en:"Teams that lack cohesion, messy cross-division communication, and new leaders not ready to lead.",website:"www.mitologiinspira.com",gallery:["img/bisnis1.jpg","img/bisnis2.jpg","img/bisnis3.jpg","img/bisnis4.jpg","img/bisnis5.jpg","img/bisnis6.jpg"],video:""},
+ tiers:{
+  bread:{apa_id:"Assessment & coaching personal. Murah, low commitment: Ansaka OAM, Lakon, MBTI Coaching Individual.",apa_en:"Personal assessment & coaching. Low commitment: Ansaka OAM, Lakon, individual MBTI coaching.",siapa_id:"Individu atau tim kecil yang mau mulai atau coba dulu.",siapa_en:"Individuals or small teams starting out.",keywords_id:["target tim nggak tercapai, nggak tahu kenapa","bingung jurusan / karir","sering beda pendapat sama pasangan","mau kenal diri lebih dalam"],keywords_en:["team targets missed, no idea why","confused about major / career","frequent disagreements at home","want deeper self-awareness"],script_id:"Ini pas untuk Dedy Dahlan dari Mitologi Inspira. Dia punya assessment seperti Ansaka, Lakon, dan MBTI plus coaching untuk memetakan. Boleh saya kenalkan?",script_en:"This fits Dedy Dahlan of Mitologi Inspira. He has assessments like Ansaka, Lakon, and MBTI plus coaching to map it out. May I introduce you?"},
+  cheese:{apa_id:"Sesi 1 hari: MBTI + Core 1 (Synergy), Solution Topic (1 dari 5), atau Workshop 6 Core Area.",apa_en:"One-day sessions: MBTI + Core 1 (Synergy), a Solution Topic (1 of 5), or a 6 Core Area workshop.",siapa_id:"Perusahaan yang mau mulai ringan atau punya budget seminar / gathering.",siapa_en:"Companies starting light or with a seminar / gathering budget.",keywords_id:["tim kurang kompak, mau coba ringan dulu","gap sudah kelihatan, mau mulai ringan","budget kecil untuk seminar / gathering internal"],keywords_en:["team not cohesive, want a light start","gap is visible, want to start light","small budget for internal seminar / gathering"],script_id:"Untuk itu, Dedy Dahlan punya sesi 1 hari, dari MBTI Synergy sampai workshop topik tertentu. Mau saya hubungkan?",script_en:"For that, Dedy Dahlan runs one-day sessions, from MBTI Synergy to focused topic workshops. Want me to connect you?"},
+  meat:{apa_id:"Komitmen besar: training 2 hari+, LDaaS partnership, atau Whole Journey (Diagnose sampai Growth).",apa_en:"Big commitment: 2-day+ training, LDaaS partnership, or the Whole Journey (Diagnose to Growth).",siapa_id:"HR Director / C-level atau owner yang siap benahi organisasi jangka panjang.",siapa_en:"HR Directors / C-level or owners ready to fix the org long term.",keywords_id:["tim siap komit 2 hari penuh","leadership lemah / burnout / gesekan lintas divisi","sering training tapi nggak nempel","mau benahi budaya organisasi dari nol"],keywords_en:["ready to commit two full days","weak leadership / burnout / cross-division friction","trained a lot but nothing sticks","rebuild org culture from scratch"],script_id:"Ini ranah utama Dedy Dahlan: journey lengkap dari diagnosa sampai jadi budaya, plus LDaaS. Kliennya Microsoft, Samsung, Mandiri. Boleh saya kenalkan langsung?",script_en:"This is Dedy Dahlan's core: a full journey from diagnosis to culture, plus LDaaS. Clients include Microsoft, Samsung, Mandiri. May I introduce you directly?"}
+ },
+ refer:{who_id:["Perusahaan skala menengah sampai besar / Tbk, karyawan banyak","Industri: perbankan, teknologi, telko, FMCG, otomotif, media, perhotelan","Orang: HR, HR Consultant, L&D, owner, atau direksi","Lagi ada masalah tim: nggak kompak, komunikasi berantakan, leader baru, turnover tinggi, budaya mau dibenahi"],who_en:["Mid-to-large / public companies with big headcount","Industries: banking, tech, telco, FMCG, automotive, media, hospitality","People: HR, HR consultants, L&D, owners, or directors","Facing team problems: not cohesive, messy communication, new leaders, high turnover, culture to fix"]},
+ biogains:{
+  personal:[{k_id:"Keluarga",k_en:"Family",v_id:"Menikah dengan Intantia Arum, yang juga COO di Mitologi Inspira.",v_en:"Married to Intantia Arum, also COO at Mitologi Inspira."},{k_id:"Catdad",k_en:"Catdad",v_id:"Bapak dari 16 kucing: Siam, Himalaya, dan campuran.",v_en:"Dad to 16 cats: Siamese, Himalayan, and mixes."}],
+  drive:[{k_id:"Burning Desire",k_en:"Burning Desire",v_id:"Bantu orang jadi versi terbaik dirinya.",v_en:"Help people become the best version of themselves."},{k_id:"Key to Success",k_en:"Key to Success",v_id:"Jadi orang baik, dan menikmati perjalanannya.",v_en:"Be a good person, and enjoy the journey."},{k_id:"Rahasia",k_en:"Secret",v_id:"Saya nggak bisa naik motor.",v_en:"I can't ride a motorcycle."}],
+  gains:[{letter:"G",title_id:"Goals",title_en:"Goals",desc_id:"Bangun journey klien lengkap, dari diagnosa sampai jadi budaya belajar. Tumbuh bareng perusahaan besar.",desc_en:"Build complete client journeys, from diagnosis to a learning culture. Grow with large companies."},{letter:"A",title_id:"Accomplishments",title_en:"Accomplishments",desc_id:"Coach ICF, MBTI resmi CPP Asia Pacific, 4 buku bestseller, 15+ tahun. Klien: Microsoft, Samsung, Mandiri.",desc_en:"ICF coach, official MBTI (CPP Asia Pacific), 4 bestsellers, 15+ years. Clients: Microsoft, Samsung, Mandiri."},{letter:"I",title_id:"Interests",title_en:"Interests",desc_id:"Storytelling, game & gamifikasi, public speaking, kuliner (cheese & dark chocolate). Kucing, tentu saja.",desc_en:"Storytelling, games & gamification, public speaking, food (cheese & dark chocolate). Cats, of course."},{letter:"N",title_id:"Networks",title_en:"Networks",desc_id:"Trainer, coach, HR, korporat, dan event organizer lintas industri premium.",desc_en:"Trainers, coaches, HR, corporates, and event organizers across premium industries."},{letter:"S",title_id:"Skills",title_en:"Skills",desc_id:"Bikin tim nyambung: komunikasi, leadership, kolaborasi. Dibungkus fun learning yang nempel.",desc_en:"Getting teams in sync: communication, leadership, collaboration. Wrapped in fun learning that sticks."}],
+  gallery:["img/bio1.jpg","img/bio2.jpg","img/bio3.jpg"]
+ },
+ sphere:{
+  top3:[{nama_id:"Konsultan HR / Recruiter",nama_en:"HR Consultant / Recruiter",why_id:"Sama-sama main di HR & L&D. Bisa saling lempar klien.",why_en:"We both work with HR & L&D. We can pass clients to each other."},{nama_id:"Event Organizer Korporat",nama_en:"Corporate Event Organizer",why_id:"Pegang acara perusahaan. Bisa jualin saya, saya bisa jualin dia ke klien yang sama. Contoh: EO outing.",why_en:"Runs company events. They can sell me, I can sell them, to the same client. Example: an outing EO."},{nama_id:"Konsultan Manajemen / Bisnis",nama_en:"Management / Business Consultant",why_id:"Dekat owner & direksi. Bisa kolaborasi di proyek yang sama.",why_en:"Close to owners & directors. We can collaborate on the same project."}],
+  others_id:["Vendor AV / Produksi","Hotel / Venue MICE","Corporate Gifting","Percetakan / Penerbit","Corporate Wellness","Katering Korporat","Fotografer / Videografer"],
+  others_en:["AV / Production","MICE Venue / Hotel","Corporate Gifting","Printing / Publisher","Corporate Wellness","Corporate Catering","Photographer / Videographer"]
+ },
+ clients:{
+  top:[{nama:"Microsoft Indonesia",src:"Referral"},{nama:"Samsung Indonesia",src:"Repeat"},{nama:"Bank Mandiri",src:"Network"},{nama:"Telkomsigma",src:"Referral"},{nama:"Standard Chartered",src:""},{nama:"Astra",src:""},{nama:"Gudang Garam",src:""},{nama:"Sinarmas",src:""},{nama:"Metro TV",src:""},{nama:"BCA",src:""}],
+  logos:["img/logo1.png","img/logo2.png","img/logo3.png","img/logo4.png","img/logo5.png","img/logo6.png"],
+  good_id:["Korporat serius & butuh dibenahi dari akar"],good_en:["Serious corporate needing root-level fixing"],
+  bad_id:["Pemerintah langsung, mikro banget, nawar parah, training terlalu teknis"],bad_en:["Direct government, very micro, heavy hagglers, too-technical"]
+ }
+};
+var TIERKEYS=[["meat","Meat"],["cheese","Cheese"],["bread","Bread"]];
+
+function el(id){return document.getElementById(id);}
+function toast(m){var t=el('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1600);}
+function L(v){return (v||[]).join('\n');}                 // array -> lines
+function A(id){return el(id).value.split('\n').map(function(s){return s.trim();}).filter(Boolean);} // lines -> array
+function J(rows,keys){return rows.map(function(r){return keys.map(function(k){return r[k];}).join(' :: ');}).join('\n');} // objs -> lines
+function P(id,keys){return A(id).map(function(line){var p=line.split('::').map(function(s){return s.trim();});var o={};keys.forEach(function(k,i){o[k]=p[i]||'';});return o;});} // lines -> objs
+
+function buildTiers(){
+ var box=el('tiers_sec');box.innerHTML='';
+ TIERKEYS.forEach(function(t){var k=t[0];
+  box.insertAdjacentHTML('beforeend','<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px"><label style="color:var(--red);font-size:12px">'+t[1]+'</label>'
+   +'<div class="two"><div><label>Apa (ID)</label><input id="t_'+k+'_apa_id"></div><div><label>What (EN)</label><input id="t_'+k+'_apa_en"></div></div>'
+   +'<div class="two"><div><label>Untuk siapa (ID)</label><input id="t_'+k+'_siapa_id"></div><div><label>For whom (EN)</label><input id="t_'+k+'_siapa_en"></div></div>'
+   +'<div class="two"><div><label>Keyword (ID, per baris)</label><textarea id="t_'+k+'_kw_id"></textarea></div><div><label>Keywords (EN, per baris)</label><textarea id="t_'+k+'_kw_en"></textarea></div></div>'
+   +'<div class="two"><div><label>Script (ID)</label><textarea id="t_'+k+'_scr_id"></textarea></div><div><label>Script (EN)</label><textarea id="t_'+k+'_scr_en"></textarea></div></div></div>');
+ });
+}
+
+function fill(D){
+ el('img_cover').value=D.images.cover;el('img_hero').value=D.images.hero;el('wa').value=D.contact.wa;el('lang_default').value=D.lang_default||'id';
+ el('h_name').value=D.hero.name;el('h_role_id').value=D.hero.role_id;el('h_role_en').value=D.hero.role_en;el('h_con_id').value=D.hero.connector_id;el('h_con_en').value=D.hero.connector_en;el('h_tag_id').value=D.hero.tagline_id;el('h_tag_en').value=D.hero.tagline_en;
+ el('bni_chapter').value=D.bni.chapter;el('bni_klas_id').value=D.bni.klasifikasi_id;el('bni_klas_en').value=D.bni.klasifikasi_en;el('bni_status').value=L(D.bni.status);el('bni_since_id').value=D.bni.since_id||'';el('bni_since_en').value=D.bni.since_en||'';el('bni_peran_id').value=D.bni.peran_id;el('bni_peran_en').value=D.bni.peran_en;
+ el('b_nama').value=D.bisnis.nama;el('b_legal').value=D.bisnis.legal;el('b_lay_id').value=D.bisnis.layanan_id;el('b_lay_en').value=D.bisnis.layanan_en;el('b_th_id').value=D.bisnis.tahun_id;el('b_th_en').value=D.bisnis.tahun_en;el('b_prod_id').value=D.bisnis.produk_id||'';el('b_prod_en').value=D.bisnis.produk_en||'';el('b_solve_id').value=D.bisnis.solve_id||'';el('b_solve_en').value=D.bisnis.solve_en||'';el('b_web').value=D.bisnis.website;el('b_video').value=D.bisnis.video||'';el('b_gallery').value=L(D.bisnis.gallery);
+ TIERKEYS.forEach(function(t){var k=t[0],x=D.tiers[k];el('t_'+k+'_apa_id').value=x.apa_id;el('t_'+k+'_apa_en').value=x.apa_en;el('t_'+k+'_siapa_id').value=x.siapa_id;el('t_'+k+'_siapa_en').value=x.siapa_en;el('t_'+k+'_kw_id').value=L(x.keywords_id);el('t_'+k+'_kw_en').value=L(x.keywords_en);el('t_'+k+'_scr_id').value=x.script_id;el('t_'+k+'_scr_en').value=x.script_en;});
+ el('bg_personal').value=J(D.biogains.personal,['k_id','k_en','v_id','v_en']);
+ el('bg_drive').value=J(D.biogains.drive,['k_id','k_en','v_id','v_en']);
+ el('bg_gains').value=J(D.biogains.gains,['letter','title_id','title_en','desc_id','desc_en']);
+ el('bg_gallery').value=L(D.biogains.gallery);
+ el('sp_top3').value=J(D.sphere.top3,['nama_id','nama_en','why_id','why_en']);
+ el('sp_oth_id').value=L(D.sphere.others_id);el('sp_oth_en').value=L(D.sphere.others_en);
+ el('cl_top').value=J(D.clients.top,['nama','src']);el('cl_logos').value=L(D.clients.logos);
+  el('cl_good_id').value=L(D.clients.good_id);el('cl_good_en').value=L(D.clients.good_en);
+ el('cl_bad_id').value=L(D.clients.bad_id);el('cl_bad_en').value=L(D.clients.bad_en);
+ el('r_who_id').value=L(D.refer&&D.refer.who_id);el('r_who_en').value=L(D.refer&&D.refer.who_en);
+}
+
+function collect(){
+ var D={lang_default:el('lang_default').value.trim()||'id',
+  images:{cover:el('img_cover').value.trim(),hero:el('img_hero').value.trim()},
+  contact:{wa:el('wa').value.trim()},
+  hero:{name:el('h_name').value,role_id:el('h_role_id').value,role_en:el('h_role_en').value,connector_id:el('h_con_id').value,connector_en:el('h_con_en').value,tagline_id:el('h_tag_id').value,tagline_en:el('h_tag_en').value},
+  bni:{chapter:el('bni_chapter').value,klasifikasi_id:el('bni_klas_id').value,klasifikasi_en:el('bni_klas_en').value,status:A('bni_status'),since_id:el('bni_since_id').value,since_en:el('bni_since_en').value,peran_id:el('bni_peran_id').value,peran_en:el('bni_peran_en').value},
+  bisnis:{nama:el('b_nama').value,legal:el('b_legal').value,layanan_id:el('b_lay_id').value,layanan_en:el('b_lay_en').value,tahun_id:el('b_th_id').value,tahun_en:el('b_th_en').value,produk_id:el('b_prod_id').value,produk_en:el('b_prod_en').value,solve_id:el('b_solve_id').value,solve_en:el('b_solve_en').value,website:el('b_web').value,gallery:A('b_gallery'),video:el('b_video').value.trim()},
+  tiers:{},
+  biogains:{personal:P('bg_personal',['k_id','k_en','v_id','v_en']),drive:P('bg_drive',['k_id','k_en','v_id','v_en']),gains:P('bg_gains',['letter','title_id','title_en','desc_id','desc_en']),gallery:A('bg_gallery')},
+  sphere:{top3:P('sp_top3',['nama_id','nama_en','why_id','why_en']),others_id:A('sp_oth_id'),others_en:A('sp_oth_en')},
+  clients:{top:P('cl_top',['nama','src']),logos:A('cl_logos'),good_id:A('cl_good_id'),good_en:A('cl_good_en'),bad_id:A('cl_bad_id'),bad_en:A('cl_bad_en')},
+  refer:{who_id:A('r_who_id'),who_en:A('r_who_en')}
+ };
+ TIERKEYS.forEach(function(t){var k=t[0];D.tiers[k]={apa_id:el('t_'+k+'_apa_id').value,apa_en:el('t_'+k+'_apa_en').value,siapa_id:el('t_'+k+'_siapa_id').value,siapa_en:el('t_'+k+'_siapa_en').value,keywords_id:A('t_'+k+'_kw_id'),keywords_en:A('t_'+k+'_kw_en'),script_id:el('t_'+k+'_scr_id').value,script_en:el('t_'+k+'_scr_en').value};});
+ return D;
+}
+
+function autosave(){try{localStorage.setItem('biogains_editor',JSON.stringify(collect()));}catch(_){}}
+function download(){
+ var txt="/* Bio GAINS data — dihasilkan oleh editor.html */\nvar DATA = "+JSON.stringify(collect(),null,2)+";\n";
+ var blob=new Blob([txt],{type:"text/javascript"});var a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download="data.js";a.click();toast("data.js diunduh");
+}
+function resetDefault(){if(confirm("Kembalikan ke data awal? Perubahan hilang.")){fill(DEFAULT);autosave();toast("direset");}}
+
+el('file').addEventListener('change',function(e){
+ var f=e.target.files[0];if(!f)return;var r=new FileReader();
+ r.onload=function(){try{var txt=r.result;var i=txt.indexOf('{'),j=txt.lastIndexOf('}');
+   var obj=new Function('return ('+txt.slice(i,j+1)+')')();fill(obj);autosave();toast("data dimuat");}catch(err){alert("Gagal baca file: "+err.message);}};
+ r.readAsText(f);
+});
+
+buildTiers();
+(function(){var saved=null;try{saved=JSON.parse(localStorage.getItem('biogains_editor'));}catch(_){}
+ fill(saved||DEFAULT);})();
+document.addEventListener('input',autosave);
+</script>
+</body>
+</html>
