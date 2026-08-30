@@ -12,8 +12,8 @@ var DATA = {
     "name": "Dedy Dahlan",
     "role_id": "Founder Mitologi Inspira",
     "role_en": "Founder, Mitologi Inspira",
-    "connector_id": "Synergy Builder",
-    "connector_en": "People Connector",
+    "connector_id": "I Help People Connect",
+    "connector_en": "I Help People Connect",
     "tagline_id": "Tim <em>Nyambung,</em> Bisnis makin <mark>Untung.</mark>",
     "tagline_en": "Teams in <em>Sync,</em> Business <mark>Wins.</mark>"
   },
@@ -50,7 +50,39 @@ var DATA = {
       "img/bisnis5.jpg",
       "img/bisnis6.jpg"
     ],
-    "video": "www.youtube.com/@mitologiinspira"
+    "video": "https://youtu.be/_mGEsfblYWk",
+    "phases": [
+      {
+        "name_id": "Diagnose",
+        "name_en": "Diagnose",
+        "desc_id": "Kenali akar masalah tim & misalignment yang menghambat organisasi dengan Organizational Alignment Map.",
+        "desc_en": "Identify the root causes of team issues and misalignment hindering the organization using the Organizational Alignment Map."
+      },
+      {
+        "name_id": "Discover",
+        "name_en": "Discover",
+        "desc_id": "Kenali karakter & potensi tiap individu, sebagai dasar pemahaman kolaborasi kerja dan penempatan yang tepat. (dengan Official MBTI / Lakon).",
+        "desc_en": "Identify each individual's character and potential as a foundation for understanding work collaboration and ensuring appropriate placement (using Official MBTI or Lakon)."
+      },
+      {
+        "name_id": "Synergy",
+        "name_en": "Synergy",
+        "desc_id": "Team Synergy training dan Alignment Workshop membantu pemahaman tim dan meningkatkan sinergi kolaboratif dalam bekerja.",
+        "desc_en": "Team Synergy Training and Alignment Workshops foster team understanding and enhance collaborative synergy in the workplace."
+      },
+      {
+        "name_id": "Solution",
+        "name_en": "Solution",
+        "desc_id": "Memberikan solusi pengembangan tim yang terarah sesuai kebutuhan, dari pelatihan, coaching, hingga pendampingan.",
+        "desc_en": "Providing targeted team development solutions tailored to specific needs, ranging from training and coaching to support."
+      },
+      {
+        "name_id": "Growth",
+        "name_en": "Growth",
+        "desc_id": "Kemitraan dan pendampingan jangka panjang memastikan budaya belajar organisasi (LDaaS).",
+        "desc_en": "Long-term partnerships and support ensure an organizational learning culture (LDaaS)."
+      }
+    ]
   },
   "tiers": {
     "meat": {
@@ -288,12 +320,12 @@ var DATA = {
       }
     ],
     "logos": [
-      "img/logo1.png",
-      "img/logo2.png",
-      "img/logo3.png",
-      "img/logo4.png",
-      "img/logo5.png",
-      "img/logo6.png"
+      "img/galeri1.png",
+      "img/galeri2.png",
+      "img/galeri3.png",
+      "img/galeri4.png",
+      "img/galeri5.png",
+      "img/galeri6.png"
     ],
     "good_id": [
       "HR Corporate",
