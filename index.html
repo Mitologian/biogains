@@ -436,11 +436,11 @@ function waMe(){
  var m=document.getElementById('wamodal');
  if(!m){m=document.createElement('div');m.id='wamodal';m.className='wamodal';m.addEventListener('click',function(e){if(e.target===m)waClose();});document.body.appendChild(m);}
  m.innerHTML='<div class="wabox">'
-  +'<div class="wahead">'+T('Kenalan dulu yuk','Let\u2019s introduce you')+'</div>'
-  +'<div class="wasub">'+T('Isi singkat ini, langsung terkirim ke WhatsApp saya.','Fill this in, it goes straight to my WhatsApp.')+'</div>'
-  +'<label class="walbl">'+T('Nama','Name')+'</label><input id="wa_name" class="wain" autocomplete="name">'
+  +'<div class="wahead">'+T('Hi! And you are?','Let\u2019s introduce you')+'</div>'
+  +'<div class="wasub">'+T('Please fill this to get connected.','Fill this in, it goes straight to my WhatsApp.')+'</div>'
+  +'<label class="walbl">'+T('Name','Name')+'</label><input id="wa_name" class="wain" autocomplete="name">'
   +'<label class="walbl">BNI Chapter</label><input id="wa_chapter" class="wain">'
-  +'<label class="walbl">'+T('Klasifikasi Bisnis','Business Classification')+'</label><input id="wa_class" class="wain">'
+  +'<label class="walbl">'+T('Business Classification','Business Classification')+'</label><input id="wa_class" class="wain">'
   +'<button class="wasend" onclick="waSend()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2z"/></svg> '+T('Kirim ke WhatsApp','Send to WhatsApp')+'</button>'
   +'<button class="wacancel" onclick="waClose()">'+T('Batal','Cancel')+'</button>'
   +'</div>';
@@ -453,7 +453,7 @@ function waSend(){
  var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
  var name=g('wa_name'),chap=g('wa_chapter'),cls=g('wa_class');
  var msg=(lang==='id')
-  ? 'Halo Dedy! Saya baru lihat Bio GAINS Anda dan ingin terhubung.\n\nNama: '+name+'\nBNI Chapter: '+chap+'\nKlasifikasi Bisnis: '+cls
+  ? 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nNama: '+name+'\nBNI Chapter: '+chap+'\nKlasifikasi Bisnis: '+cls
   : 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nName: '+name+'\nBNI Chapter: '+chap+'\nBusiness Classification: '+cls;
  window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
  waClose();
