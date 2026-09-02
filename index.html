@@ -46,6 +46,18 @@
   .qbtn svg{width:18px;height:18px}
   .qbtn.wa{background:#25D366}
   .qbtn.save{background:var(--orange)}
+  .wamodal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+  .wamodal.show{display:flex}
+  .wabox{background:#fff;border-radius:18px;padding:22px 20px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:rbpop .35s ease}
+  .wahead{font-size:18px;font-weight:800;color:var(--ink)}
+  .wasub{font-size:12.5px;color:var(--muted);margin:4px 0 12px;line-height:1.4}
+  .walbl{display:block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:11px 0 5px}
+  .wain{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:14px;color:var(--ink);box-sizing:border-box}
+  .wain:focus{outline:none;border-color:#25D366}
+  .wasend{width:100%;margin-top:18px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .wasend svg{width:18px;height:18px}
+  .wasend:active{transform:scale(.98)}
+  .wacancel{width:100%;margin-top:8px;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:8px}
   .lang button{border:none;background:transparent;padding:6px 12px;color:var(--muted);cursor:pointer;font-family:inherit}
   .lang button.on{background:var(--ink);color:#fff}
 
@@ -227,7 +239,7 @@
     <div class="cover-role" id="coverrole"></div>
     <div class="cover-connect" id="coverconnect"></div>
     <div class="cover-title">Bio GAINS</div>
-    <button class="cover-btn" onclick="enterApp()"><span data-t="cta_enter">Kenali Saya</span> <span class="ar">→</span></button>
+    <button class="cover-btn" onclick="enterApp()"><span data-t="cta_enter">Get to Know Me</span> <span class="ar">→</span></button>
   </div>
 
   <div class="topbar">
@@ -420,7 +432,32 @@ function showReferbar(on){var pb=document.getElementById('progblock'),rb=documen
 function enterApp(){var c=document.getElementById('cover');if(c)c.classList.add('hidden');}
 function fitCoverName(){var el=document.getElementById('covername');if(!el)return;var cover=el.parentNode;var cs=getComputedStyle(cover);var avail=cover.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);if(avail<=0)return;el.style.fontSize='100px';var natural=el.scrollWidth||el.getBoundingClientRect().width;if(!natural)return;var size=100*(avail*0.99)/natural;size=Math.max(30,Math.min(size,98));el.style.fontSize=size+'px';}
 window.addEventListener('resize',fitCoverName);
-function waMe(){var wa=(DATA.contact&&DATA.contact.wa)?DATA.contact.wa:'';var msg=encodeURIComponent(T('Halo Dedy, saya dapat kontak Anda dari Bio GAINS.','Hi Dedy, I got your contact from your Bio GAINS.'));window.open('https://wa.me/'+wa+(wa?('?text='+msg):''),'_blank');}
+function waMe(){
+ var m=document.getElementById('wamodal');
+ if(!m){m=document.createElement('div');m.id='wamodal';m.className='wamodal';m.addEventListener('click',function(e){if(e.target===m)waClose();});document.body.appendChild(m);}
+ m.innerHTML='<div class="wabox">'
+  +'<div class="wahead">'+T('Kenalan dulu yuk','Let\u2019s introduce you')+'</div>'
+  +'<div class="wasub">'+T('Isi singkat ini, langsung terkirim ke WhatsApp saya.','Fill this in, it goes straight to my WhatsApp.')+'</div>'
+  +'<label class="walbl">'+T('Nama','Name')+'</label><input id="wa_name" class="wain" autocomplete="name">'
+  +'<label class="walbl">BNI Chapter</label><input id="wa_chapter" class="wain">'
+  +'<label class="walbl">'+T('Klasifikasi Bisnis','Business Classification')+'</label><input id="wa_class" class="wain">'
+  +'<button class="wasend" onclick="waSend()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2z"/></svg> '+T('Kirim ke WhatsApp','Send to WhatsApp')+'</button>'
+  +'<button class="wacancel" onclick="waClose()">'+T('Batal','Cancel')+'</button>'
+  +'</div>';
+ m.classList.add('show');
+ setTimeout(function(){var n=document.getElementById('wa_name');if(n)n.focus();},60);
+}
+function waClose(){var m=document.getElementById('wamodal');if(m)m.classList.remove('show');}
+function waSend(){
+ var wa=(DATA.contact&&DATA.contact.wa)?DATA.contact.wa:'';
+ var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
+ var name=g('wa_name'),chap=g('wa_chapter'),cls=g('wa_class');
+ var msg=(lang==='id')
+  ? 'Halo Dedy! Saya baru lihat Bio GAINS Anda dan ingin terhubung.\n\nNama: '+name+'\nBNI Chapter: '+chap+'\nKlasifikasi Bisnis: '+cls
+  : 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nName: '+name+'\nBNI Chapter: '+chap+'\nBusiness Classification: '+cls;
+ window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
+ waClose();
+}
 function saveContact(){var D=DATA;var parts=(D.hero.name||'').trim().split(' ');var first=parts[0]||'';var last=parts.slice(1).join(' ');var web=(D.bisnis.website||'').replace(/^https?:\/\//,'');var lines=['BEGIN:VCARD','VERSION:3.0','N:'+last+';'+first+';;;','FN:'+D.hero.name,'ORG:'+(D.bisnis.nama||''),'TITLE:'+T(D.hero.role_id,D.hero.role_en)+' | '+T(D.hero.connector_id,D.hero.connector_en),'TEL;TYPE=CELL:+'+(D.contact.wa||''),web?('URL:https://'+web):'','NOTE:'+(D.bni.chapter||''),'END:VCARD'];var v=lines.filter(Boolean).join('\r\n');try{var blob=new Blob([v],{type:'text/vcard;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=(D.hero.name||'contact')+'.vcf';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1500);}catch(_){waMe();}}
 
 function applyStatic(){
@@ -431,7 +468,7 @@ function applyStatic(){
  fitCoverName();
  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fitCoverName);}
  document.getElementById('tbname').textContent=D.hero.name;
- document.querySelector('[data-t="cta_enter"]').textContent=T('Kenali Saya','Get to know me');
+ document.querySelector('[data-t="cta_enter"]').textContent='Get to Know Me';
  document.querySelector('[data-t="fab"]').textContent='How to Refer Me';
  var rt=document.querySelector('[data-t="reftap"]');if(rt)rt.textContent=T('Tap Disini','Tap Here');
 }
