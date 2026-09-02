@@ -46,6 +46,9 @@
   .qbtn svg{width:18px;height:18px}
   .qbtn.wa{background:#25D366}
   .qbtn.save{background:var(--orange)}
+  .qbtn.share{background:var(--orange)}
+  .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(10px);background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;padding:11px 16px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:300;max-width:80%;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .wamodal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
   .wamodal.show{display:flex}
   .wabox{background:#fff;border-radius:18px;padding:22px 20px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:rbpop .35s ease}
@@ -247,7 +250,7 @@
       <div class="tb-name"><div class="t" id="tbname">Dedy Dahlan</div><div class="e">BNI GROW · Bio GAINS</div></div></div>
     <div class="tb-r">
       <button class="qbtn wa" onclick="waMe()" title="WhatsApp" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.4-.7-1.7-.8s-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4s-.6-1.4-.8-1.9c-.2-.4-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.2 5 5 0 0 0 1.1 2.7 11.4 11.4 0 0 0 4.3 3.8c1.6.7 1.9.6 2.3.5a2.4 2.4 0 0 0 1.6-1.1c.2-.5.2-.9.1-1z"/></svg></button>
-      <button class="qbtn save" onclick="saveContact()" title="Simpan Kontak" aria-label="Simpan Kontak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3.3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M18 8v6M15 11h6"/></svg></button>
+      <button class="qbtn share" onclick="shareLink(this)" title="Save / Share link" aria-label="Save or share link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
       <div class="lang"><button id="lid" class="on" onclick="setLang('id')">ID</button><button id="len" onclick="setLang('en')">EN</button></div>
     </div>
   </div>
@@ -458,7 +461,26 @@ function waSend(){
  window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
  waClose();
 }
-function saveContact(){var D=DATA;var parts=(D.hero.name||'').trim().split(' ');var first=parts[0]||'';var last=parts.slice(1).join(' ');var web=(D.bisnis.website||'').replace(/^https?:\/\//,'');var lines=['BEGIN:VCARD','VERSION:3.0','N:'+last+';'+first+';;;','FN:'+D.hero.name,'ORG:'+(D.bisnis.nama||''),'TITLE:'+T(D.hero.role_id,D.hero.role_en)+' | '+T(D.hero.connector_id,D.hero.connector_en),'TEL;TYPE=CELL:+'+(D.contact.wa||''),web?('URL:https://'+web):'','NOTE:'+(D.bni.chapter||''),'END:VCARD'];var v=lines.filter(Boolean).join('\r\n');try{var blob=new Blob([v],{type:'text/vcard;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=(D.hero.name||'contact')+'.vcf';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1500);}catch(_){waMe();}}
+function shareLink(btn){
+ var D=DATA;
+ var url=(location&&location.href)?location.href.split('#')[0]:(D.bisnis&&D.bisnis.website?('https://'+D.bisnis.website.replace(/^https?:\/\//,'')):'');
+ var title='Bio GAINS - '+(D.hero&&D.hero.name?D.hero.name:'Dedy Dahlan');
+ var text=title+' - keep this link so you can find me again.';
+ if(navigator.share){
+   navigator.share({title:title,text:text,url:url}).catch(function(){});
+   return;
+ }
+ var toCopy=title+'\n'+url;
+ copyText(toCopy).then(function(ok){
+   flashToast(ok?'Link copied. Paste it anywhere to save.':'Press and hold the link to copy.');
+ });
+}
+function flashToast(msg){
+ var t=document.getElementById('toast');
+ if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t);}
+ t.textContent=msg;t.classList.add('show');
+ clearTimeout(window.__toastT);window.__toastT=setTimeout(function(){t.classList.remove('show');},2600);
+}
 
 function applyStatic(){
  var D=DATA;
