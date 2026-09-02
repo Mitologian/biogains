@@ -27,9 +27,9 @@
   .cover-role{font-size:14px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.95);margin-top:12px}
   .cover-connect{font-size:13px;font-weight:400;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-top:3px}
   .cover-title{font-size:11px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.25);display:inline-block}
-  .cover-btn{margin-top:26px;background:#fff;color:var(--orange);border:none;font-family:inherit;font-weight:800;font-size:15px;padding:15px 20px;border-radius:14px;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
-  .cover-btn:hover{transform:translateY(-1px)}
-  .cover-btn .ar{transition:transform .2s}.cover-btn:hover .ar{transform:translateX(3px)}
+  .cover-btn{margin-top:26px;background:#fff;color:var(--orange);border:none;font-family:inherit;font-weight:800;font-size:15px;padding:15px 20px;border-radius:14px;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;animation:covpulse 2.6s ease-in-out infinite}
+  .cover-btn:active{transform:scale(.97)}
+  @keyframes covpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 
   .topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--marble);border-bottom:1px solid var(--line)}
   .tb-l{display:flex;align-items:center;gap:12px}
@@ -242,7 +242,7 @@
     <div class="cover-role" id="coverrole"></div>
     <div class="cover-connect" id="coverconnect"></div>
     <div class="cover-title">Bio GAINS</div>
-    <button class="cover-btn" onclick="enterApp()"><span data-t="cta_enter">Tap Here to Connect</span> <span class="ar">→</span></button>
+    <button class="cover-btn" onclick="enterApp()"><span data-t="cta_enter">Tap here to connect</span> <span class="ar">→</span></button>
   </div>
 
   <div class="topbar">
@@ -490,7 +490,7 @@ function applyStatic(){
  fitCoverName();
  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fitCoverName);}
  document.getElementById('tbname').textContent=D.hero.name;
- document.querySelector('[data-t="cta_enter"]').textContent='Get to Know Me';
+ document.querySelector('[data-t="cta_enter"]').textContent='Tap here to connect';
  document.querySelector('[data-t="fab"]').textContent='How to Refer Me';
  var rt=document.querySelector('[data-t="reftap"]');if(rt)rt.textContent=T('Tap Disini','Tap Here');
 }
