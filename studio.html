@@ -47,6 +47,8 @@
 <div class="bar">
   <h1>Bio GAINS <span>· Studio</span></h1>
   <div class="r" id="barr" hidden>
+    <span class="pill" id="meter"></span>
+    <span class="pill" id="savepill"></span>
     <span class="pill" id="pubpill"></span>
     <button class="btn-s" onclick="openMine()">Lihat halaman</button>
     <button class="btn-s" onclick="copyMine()">Salin link</button>
@@ -200,7 +202,24 @@ function collect(){
  return D;
 }
 
-var idToken='',ME=null;
+var idToken='',ME=null,dirty=false,pendingSave=false;
+function draftKey(){return 'bg_draft_'+(ME?ME.slug:'');}
+function saveDraft(){if(!ME)return;try{localStorage.setItem(draftKey(),JSON.stringify({t:Date.now(),data:collect()}));}catch(_){}}
+function clearDraft(){try{localStorage.removeItem(draftKey());}catch(_){}}
+function setSavePill(){var p=el('savepill');p.textContent=dirty?'Belum disimpan':'Tersimpan';p.className='pill'+(dirty?'':' ok');}
+function markDirty(){dirty=true;saveDraft();setSavePill();updateMeter();}
+function updateMeter(){
+ var D=collect(),any=function(a,b){return !!(a||b);},len=function(a,b){return !!((a&&a.length)||(b&&b.length));};
+ var c=[any(D.images.cover,D.images.hero),!!D.contact.wa,!!D.hero.name,any(D.hero.role_id,D.hero.role_en),any(D.hero.tagline_id,D.hero.tagline_en),
+  !!D.bni.chapter,any(D.bni.klasifikasi_id,D.bni.klasifikasi_en),!!D.bisnis.nama,any(D.bisnis.layanan_id,D.bisnis.layanan_en),len(D.refer.who_id,D.refer.who_en),
+  any(D.tiers.bread.apa_id,D.tiers.bread.apa_en),any(D.tiers.cheese.apa_id,D.tiers.cheese.apa_en),any(D.tiers.meat.apa_id,D.tiers.meat.apa_en),
+  D.biogains.gains.length>0,D.biogains.personal.length+D.biogains.drive.length>0,D.sphere.top3.length>0,D.clients.top.length>0];
+ var n=c.filter(Boolean).length;el('meter').textContent='Kelengkapan '+Math.round(n/c.length*100)+'%';
+}
+document.addEventListener('input',function(e){if(!ME||el('editor').hidden||(e.target.id&&/^rg_/.test(e.target.id)))return;markDirty();});
+window.addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue='';}});
+// Sesi Google habis: form tetap ada, hanya tampilkan tombol masuk lagi.
+function authExpired(){pendingSave=true;idToken='';show('c_login',true);el('e_login').textContent='Sesi habis. Masuk lagi untuk melanjutkan. Perubahan Anda tetap aman di halaman ini.';window.scrollTo(0,0);}
 var ERR={auth:'Sesi habis, silakan masuk lagi.',bad_invite:'Kode undangan tidak valid atau sudah dipakai.',bad_slug:'Nama link tidak valid. Pakai 3-30 huruf kecil, angka, atau tanda minus.',slug_taken:'Nama link sudah dipakai orang lain.',name_required:'Nama wajib diisi.',already_registered:'Akun ini sudah terdaftar.',too_large:'Data atau foto terlalu besar.',too_many_files:'Batas jumlah foto tercapai.',bad_type:'Format foto harus JPG, PNG, atau WebP.',blocked:'Akun ini dinonaktifkan.',not_registered:'Akun belum terdaftar.'};
 function msg(r){return (r&&ERR[r.error])||'Terjadi kesalahan. Coba lagi.';}
 function api(action,payload){
@@ -213,7 +232,13 @@ function relogin(text){idToken='';ME=null;show('c_login',true);show('c_register'
 function onCred(resp){
  idToken=resp.credential;el('e_login').textContent='Memeriksa akun...';
  api('me').then(function(r){
-  if(!r.ok){relogin(msg(r));return;}
+  if(!r.ok){if(ME)authExpired();else relogin(msg(r));return;}
+  if(ME){
+   if(r.email!==ME.email){el('e_login').textContent='Akun berbeda. Masuk dengan '+ME.email+'.';return;}
+   show('c_login',false);el('e_login').textContent='';toast('Masuk lagi');
+   if(pendingSave){pendingSave=false;saveAll();}
+   return;
+  }
   show('c_login',false);el('e_login').textContent='';
   if(!r.registered){
    show('c_register',true);el('reg_as').textContent='Masuk sebagai '+r.email+'.'+(r.registration==='invite'?' Pendaftaran saat ini hanya dengan kode undangan.':'');
@@ -225,7 +250,13 @@ function onCred(resp){
 
 function enterEditor(r){
  show('c_register',false);show('editor',true);show('barr',true);
- fill(mergeT(BG_TEMPLATE,r.data||{}));
+ fill(mergeT(BG_TEMPLATE,r.data||{}));dirty=false;
+ var draft=null;try{draft=JSON.parse(localStorage.getItem(draftKey()));}catch(_){}
+ if(draft&&draft.data&&JSON.stringify(draft.data)!==JSON.stringify(collect())){
+  if(confirm('Ada perubahan yang belum disimpan dari '+new Date(draft.t).toLocaleString('id-ID')+'. Lanjutkan draf itu?')){fill(mergeT(BG_TEMPLATE,draft.data));dirty=true;}
+  else clearDraft();
+ }
+ setSavePill();updateMeter();
  var p=el('pubpill');p.textContent=r.public?'Tampil di direktori':'Belum di direktori';p.className='pill'+(r.public?' ok':'');
 }
 
@@ -256,8 +287,8 @@ function doRegister(){
 
 function saveAll(){
  api('save',{data:collect()}).then(function(r){
-  if(r.ok){toast('Tersimpan');}
-  else if(r.error==='auth'){relogin(msg(r));alert(msg(r));}
+  if(r.ok){dirty=false;clearDraft();setSavePill();toast('Tersimpan');}
+  else if(r.error==='auth'){authExpired();}
   else alert(msg(r));
  }).catch(function(){alert('Tidak bisa menghubungi server.');});
 }
@@ -281,9 +312,9 @@ function uploadInto(id,multi){
  inp.onchange=function(){
   var files=[].slice.call(inp.files),chain=Promise.resolve();
   files.forEach(function(f){chain=chain.then(function(){toast('Mengunggah '+f.name+'...');return shrink(f).then(function(b64){return api('upload',{mime:'image/jpeg',b64:b64});}).then(function(r){
-   if(!r.ok){if(r.error==='auth')relogin(msg(r));throw new Error(msg(r));}
+   if(!r.ok){if(r.error==='auth')authExpired();throw new Error(msg(r));}
    var t=el(id);if(multi){t.value=(t.value.trim()?t.value.trim()+'\n':'')+r.url;}else{t.value=r.url;}
-   toast('Foto terunggah. Jangan lupa Simpan.');
+   markDirty();toast('Foto terunggah. Jangan lupa Simpan.');
   });});});
   chain.catch(function(e){alert(e.message||'Gagal mengunggah');});
  };

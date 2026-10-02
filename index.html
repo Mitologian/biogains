@@ -356,6 +356,10 @@ function blocks(b){
  return '';
 }
 
+function pruneEmpty(root){
+ [].slice.call(root.querySelectorAll('.kv')).forEach(function(kv){var v=kv.querySelector('.v');if(v&&!v.textContent.replace(/[\s·]/g,''))kv.remove();});
+ [].slice.call(root.querySelectorAll('.mini')).forEach(function(m){var n=m.nextElementSibling;if(!n||n.classList.contains('mini'))m.remove();});
+}
 function referHTML(){
  var D=DATA;
  var wa=(D.contact&&D.contact.wa)?'https://wa.me/'+D.contact.wa:'#';
@@ -420,7 +424,7 @@ function pick(b,tileEl){
  area.innerHTML='<div class="phead"><span class="pic">'+ICON[b]+'</span><span class="pt">'+T(TITLES[b][0],TITLES[b][1])+'</span></div><div class="pbody" id="pbody"></div>';
  var body=document.getElementById('pbody');
  if(b==='refer'){body.innerHTML=referHTML();renderTier(curTier);}
- else body.innerHTML=blocks(b);
+ else{body.innerHTML=blocks(b);pruneEmpty(body);}
  var sc=document.getElementById('scroll');if(sc)sc.scrollTop=0;
  if(KNOW.indexOf(b)>-1&&!read.has(b)){read.add(b);save();var t=document.querySelector('.tile[data-b="'+b+'"]');if(t)t.classList.add('done');updateProgress();}
 }
