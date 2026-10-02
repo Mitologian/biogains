@@ -455,7 +455,7 @@ function waMe(src){
  setTimeout(function(){var n=document.getElementById('wa_name');if(n)n.focus();},60);
 }
 // Isi dengan URL Web App dari Google Apps Script (lihat apps-script.gs). Kosong = tidak kirim ke sheet.
-var SHEET_URL='';
+var SHEET_URL='https://script.google.com/macros/s/AKfycbx5otm4yiEbpkbIh5FgIN0QZtknzuBoY8bzfEdy254lCDRkmYtzUtf_c80-qeHzkTXV/exec';
 function logToSheet(d){
  if(!SHEET_URL||!(d.name||d.chapter||d.classification))return;
  try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).catch(function(){});}catch(_){}
