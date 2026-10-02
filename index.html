@@ -432,10 +432,14 @@ function updateProgress(){
 }
 function isUnlocked(){try{return localStorage.getItem('dd_refer_unlocked')==='1';}catch(_){return false;}}
 function showReferbar(on){var pb=document.getElementById('progblock'),rb=document.getElementById('referbar');if(!pb||!rb)return;if(on){pb.style.display='none';rb.classList.add('show');}else{pb.style.display='';rb.classList.remove('show');}}
-function enterApp(){var c=document.getElementById('cover');if(c)c.classList.add('hidden');}
+function enterApp(){var c=document.getElementById('cover');if(c)c.classList.add('hidden');
+ var seen=false;try{seen=localStorage.getItem('dd_wa_seen')==='1';}catch(_){}
+ if(!seen){try{localStorage.setItem('dd_wa_seen','1');}catch(_){}setTimeout(function(){waMe('auto');},450);}
+}
 function fitCoverName(){var el=document.getElementById('covername');if(!el)return;var cover=el.parentNode;var cs=getComputedStyle(cover);var avail=cover.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);if(avail<=0)return;el.style.fontSize='100px';var natural=el.scrollWidth||el.getBoundingClientRect().width;if(!natural)return;var size=100*(avail*0.99)/natural;size=Math.max(30,Math.min(size,98));el.style.fontSize=size+'px';}
 window.addEventListener('resize',fitCoverName);
-function waMe(){
+function waMe(src){
+ window.__waSrc=(src==='auto')?'popup_auto':'button';
  var m=document.getElementById('wamodal');
  if(!m){m=document.createElement('div');m.id='wamodal';m.className='wamodal';m.addEventListener('click',function(e){if(e.target===m)waClose();});document.body.appendChild(m);}
  m.innerHTML='<div class="wabox">'
@@ -450,6 +454,12 @@ function waMe(){
  m.classList.add('show');
  setTimeout(function(){var n=document.getElementById('wa_name');if(n)n.focus();},60);
 }
+// Isi dengan URL Web App dari Google Apps Script (lihat apps-script.gs). Kosong = tidak kirim ke sheet.
+var SHEET_URL='';
+function logToSheet(d){
+ if(!SHEET_URL||!(d.name||d.chapter||d.classification))return;
+ try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).catch(function(){});}catch(_){}
+}
 function waClose(){var m=document.getElementById('wamodal');if(m)m.classList.remove('show');}
 function waSend(){
  var wa=(DATA.contact&&DATA.contact.wa)?DATA.contact.wa:'';
@@ -458,6 +468,7 @@ function waSend(){
  var msg=(lang==='id')
   ? 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nNama: '+name+'\nBNI Chapter: '+chap+'\nKlasifikasi Bisnis: '+cls
   : 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nName: '+name+'\nBNI Chapter: '+chap+'\nBusiness Classification: '+cls;
+ logToSheet({name:name,chapter:chap,classification:cls,lang:lang,source:window.__waSrc||'button',page:location.href.split('#')[0]});
  window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
  waClose();
 }
