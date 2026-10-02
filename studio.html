@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bio GAINS Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--red:#CF142B;--ink:#191919;--line:#e4e4e4;--muted:#6E6E6E;--bg:#f4f4f5}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Montserrat',system-ui,sans-serif}
+  body{background:var(--bg);color:var(--ink);padding-bottom:80px}
+  .bar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;flex-wrap:wrap}
+  .bar h1{font-size:15px;font-weight:800}.bar h1 span{color:var(--red)}
+  .bar .r{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:inherit;font-weight:700;font-size:12.5px;border:none;border-radius:9px;padding:9px 14px;cursor:pointer}
+  .btn-p{background:var(--red);color:#fff}.btn-s{background:#eee;color:#333}
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  .hint{font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:16px;line-height:1.5}
+  .hint code{background:#f0f0f0;padding:1px 5px;border-radius:4px;font-size:11px}
+  details{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  summary{font-weight:800;font-size:13.5px;padding:13px 15px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+  summary::before{content:"▸";color:var(--red);transition:.2s}details[open] summary::before{transform:rotate(90deg)}
+  .sec{padding:4px 15px 16px}
+  label{display:block;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:12px 0 5px}
+  input,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;background:#fff;resize:vertical}
+  input:focus,textarea:focus{outline:none;border-color:var(--red)}
+  textarea{min-height:64px;line-height:1.5}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .flag{font-size:8px;font-weight:800;color:var(--red);margin-left:4px}
+  .note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+  @media(max-width:560px){.two{grid-template-columns:1fr}}
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20}
+  #toast.on{opacity:1}
+  input[type=file]{font-size:12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:15px;font-weight:800;margin-bottom:6px}
+  .card p{font-size:12.5px;color:var(--muted);line-height:1.55}
+  .err{color:#b00020;font-size:12.5px;font-weight:600;margin-top:10px;min-height:16px}
+  .up{margin-top:6px;background:#eee;color:#333;font-size:11.5px;padding:7px 11px}
+  .pill{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:3px 10px;background:#eee;color:#333}
+  .pill.ok{background:#e3f6e8;color:#14753a}
+  #gbtn{margin-top:12px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Bio GAINS <span>· Studio</span></h1>
+  <div class="r" id="barr" hidden>
+    <span class="pill" id="pubpill"></span>
+    <button class="btn-s" onclick="openMine()">Lihat halaman</button>
+    <button class="btn-s" onclick="copyMine()">Salin link</button>
+    <button class="btn-p" onclick="saveAll()">Simpan</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="card" id="c_login">
+    <h2>Masuk</h2>
+    <p>Masuk dengan akun Google Anda untuk membuat atau mengubah Bio GAINS. Akun Google dipakai hanya untuk mengenali Anda, tidak ada password yang disimpan.</p>
+    <div id="gbtn"></div>
+    <div class="err" id="e_login"></div>
+  </div>
+
+  <div class="card" id="c_register" hidden>
+    <h2>Buat Bio GAINS Anda</h2>
+    <p id="reg_as"></p>
+    <label>Kode undangan</label><input id="rg_invite" autocomplete="off" placeholder="BG-XXXXXX">
+    <label>Nama link <span class="flag">huruf kecil, angka, tanda minus</span></label><input id="rg_slug" autocomplete="off" placeholder="mis. miky">
+    <div class="note" id="rg_preview"></div>
+    <label>Nama lengkap</label><input id="rg_name" autocomplete="name">
+    <label>BNI Chapter</label><input id="rg_chapter" placeholder="mis. BNI GROW · Jakarta Barat">
+    <div style="margin-top:14px"><button class="btn-p" onclick="doRegister()">Buat akun</button></div>
+    <div class="err" id="e_reg"></div>
+  </div>
+
+  <div id="editor" hidden>
+  <div class="hint">Isi form, lalu tekan <b>Simpan</b> (di kanan atas). Halaman Anda langsung terbarui di link Anda.<br>
+  Untuk semua daftar bertitik (WHO, Good/Bad Referral, keyword, klien): <b>satu baris = satu bullet</b>. Untuk baris berisi beberapa kolom, pisahkan dengan <code>::</code> (urutan sesuai keterangan di tiap kotak). Foto: tekan tombol <b>Unggah foto</b>, tidak perlu menulis path.<br>
+  Tampil di direktori chapter menunggu persetujuan admin.</div>
+
+  <details open><summary>Gambar & Kontak</summary><div class="sec">
+    <label>Cover (potret penuh)</label><input id="img_cover" readonly><button class="up" onclick="uploadInto('img_cover',false)">Unggah foto</button>
+    <label>Hero (banner)</label><input id="img_hero" readonly><button class="up" onclick="uploadInto('img_hero',false)">Unggah foto</button>
+    <label>Nomor WhatsApp <span class="flag">wa.me</span></label><input id="wa"><div class="note">Format internasional tanpa +, mis. 628112060043</div>
+    <label>Bahasa default</label><input id="lang_default" placeholder="id / en">
+  </div></details>
+
+  <details><summary>Hero</summary><div class="sec">
+    <label>Nama</label><input id="h_name">
+    <div class="two"><div><label>Peran (ID)</label><input id="h_role_id"></div><div><label>Role (EN)</label><input id="h_role_en"></div></div>
+    <div class="two"><div><label>Connector (ID)</label><input id="h_con_id"></div><div><label>Connector (EN)</label><input id="h_con_en"></div></div>
+    <div class="two"><div><label>Tagline (ID)</label><input id="h_tag_id"></div><div><label>Tagline (EN)</label><input id="h_tag_en"></div></div>
+    <div class="note">Boleh pakai &lt;em&gt;miring&lt;/em&gt; dan &lt;mark&gt;highlight&lt;/mark&gt;.</div>
+  </div></details>
+
+  <details><summary>Keanggotaan BNI</summary><div class="sec">
+    <label>Chapter</label><input id="bni_chapter">
+    <div class="two"><div><label>Klasifikasi (ID)</label><input id="bni_klas_id"></div><div><label>Classification (EN)</label><input id="bni_klas_en"></div></div>
+    <label>Status (satu per baris)</label><textarea id="bni_status"></textarea>
+    <div class="two"><div><label>Member Sejak (ID)</label><input id="bni_since_id"></div><div><label>Member Since (EN)</label><input id="bni_since_en"></div></div>
+    <div class="two"><div><label>Peran Lain (ID)</label><input id="bni_peran_id"></div><div><label>Other Role (EN)</label><input id="bni_peran_en"></div></div>
+  </div></details>
+
+  <details><summary>Bisnis</summary><div class="sec">
+    <label>Nama</label><input id="b_nama"><label>Legal</label><input id="b_legal">
+    <div class="two"><div><label>What We Do (ID)</label><textarea id="b_lay_id"></textarea></div><div><label>What We Do (EN)</label><textarea id="b_lay_en"></textarea></div></div>
+    <div class="two"><div><label>Pengalaman (ID)</label><input id="b_th_id"></div><div><label>Years (EN)</label><input id="b_th_en"></div></div>
+    <div class="two"><div><label>What We Solve (ID)</label><textarea id="b_solve_id"></textarea></div><div><label>What We Solve (EN)</label><textarea id="b_solve_en"></textarea></div></div>
+    <div class="two"><div><label>Produk (ID)</label><input id="b_prod_id"></div><div><label>Product (EN)</label><input id="b_prod_en"></div></div>
+    <label>Website</label><input id="b_web">
+    <label>Video YouTube (URL, opsional)</label><input id="b_video">
+    <label>5 Fase Team Synergy <span class="flag">name_id :: name_en :: desc_id :: desc_en</span></label><textarea id="b_phases" style="min-height:120px"></textarea>
+    <label>Galeri (foto, satu per baris)</label><textarea id="b_gallery"></textarea><button class="up" onclick="uploadInto('b_gallery',true)">Unggah foto</button>
+  </div></details>
+
+  <details><summary>Tiers (Meat / Cheese / Bread)</summary><div class="sec" id="tiers_sec"></div></details>
+
+  <details><summary>How to Refer &mdash; WHO</summary><div class="sec">
+    <div class="two"><div><label>Profil WHO (ID) <span class="flag">1 baris = 1 bullet</span></label><textarea id="r_who_id" style="min-height:120px"></textarea></div><div><label>Profile WHO (EN) <span class="flag">1 baris = 1 bullet</span></label><textarea id="r_who_en" style="min-height:120px"></textarea></div></div>
+  </div></details>
+
+  <details><summary>Bio GAINS</summary><div class="sec">
+    <label>Personal <span class="flag">k_id :: k_en :: v_id :: v_en</span></label><textarea id="bg_personal"></textarea>
+    <label>Yang Mendorong Saya <span class="flag">k_id :: k_en :: v_id :: v_en</span></label><textarea id="bg_drive"></textarea>
+    <label>GAINS <span class="flag">huruf :: title_id :: title_en :: desc_id :: desc_en</span></label><textarea id="bg_gains" style="min-height:130px"></textarea>
+    <label>Galeri (foto, satu per baris)</label><textarea id="bg_gallery"></textarea><button class="up" onclick="uploadInto('bg_gallery',true)">Unggah foto</button>
+  </div></details>
+
+  <details><summary>Contact Sphere</summary><div class="sec">
+    <label>Paling Nyambung <span class="flag">nama_id :: nama_en :: why_id :: why_en</span></label><textarea id="sp_top3" style="min-height:100px"></textarea>
+    <div class="two"><div><label>Lainnya (ID, satu per baris)</label><textarea id="sp_oth_id"></textarea></div><div><label>Others (EN, satu per baris)</label><textarea id="sp_oth_en"></textarea></div></div>
+  </div></details>
+
+  <details><summary>Klien</summary><div class="sec">
+    <label>Top Klien <span class="flag">nama :: src</span></label><textarea id="cl_top" style="min-height:120px"></textarea>
+    <label>Galeri Klien / foto event (foto, satu per baris)</label><textarea id="cl_logos"></textarea><button class="up" onclick="uploadInto('cl_logos',true)">Unggah foto</button>
+    <div class="two"><div><label>Good Referral (ID) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_good_id"></textarea></div><div><label>Good Referral (EN) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_good_en"></textarea></div></div>
+    <div class="two"><div><label>Bad Referral (ID) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_bad_id"></textarea></div><div><label>Bad Referral (EN) <span class="flag">1 baris = 1 bullet</span></label><textarea id="cl_bad_en"></textarea></div></div>
+  </div></details>
+</div>
+</div>
+<div id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="config.js"></script>
+<script src="template.js"></script>
+<script>
+var TIERKEYS=[["meat","Meat"],["cheese","Cheese"],["bread","Bread"]];
+
+function el(id){return document.getElementById(id);}
+function toast(m){var t=el('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1600);}
+function L(v){return (v||[]).join('\n');}                 // array -> lines
+function A(id){return el(id).value.split('\n').map(function(s){return s.trim();}).filter(Boolean);} // lines -> array
+function J(rows,keys){return rows.map(function(r){return keys.map(function(k){return r[k];}).join(' :: ');}).join('\n');} // objs -> lines
+function P(id,keys){return A(id).map(function(line){var p=line.split('::').map(function(s){return s.trim();});var o={};keys.forEach(function(k,i){o[k]=p[i]||'';});return o;});} // lines -> objs
+
+function buildTiers(){
+ var box=el('tiers_sec');box.innerHTML='';
+ TIERKEYS.forEach(function(t){var k=t[0];
+  box.insertAdjacentHTML('beforeend','<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px"><label style="color:var(--red);font-size:12px">'+t[1]+'</label>'
+   +'<div class="two"><div><label>Apa (ID)</label><input id="t_'+k+'_apa_id"></div><div><label>What (EN)</label><input id="t_'+k+'_apa_en"></div></div>'
+   +'<div class="two"><div><label>Untuk siapa (ID)</label><input id="t_'+k+'_siapa_id"></div><div><label>For whom (EN)</label><input id="t_'+k+'_siapa_en"></div></div>'
+   +'<div class="two"><div><label>Keyword (ID, per baris)</label><textarea id="t_'+k+'_kw_id"></textarea></div><div><label>Keywords (EN, per baris)</label><textarea id="t_'+k+'_kw_en"></textarea></div></div>'
+   +'<div class="two"><div><label>Script (ID)</label><textarea id="t_'+k+'_scr_id"></textarea></div><div><label>Script (EN)</label><textarea id="t_'+k+'_scr_en"></textarea></div></div></div>');
+ });
+}
+
+function fill(D){
+ el('img_cover').value=D.images.cover;el('img_hero').value=D.images.hero;el('wa').value=D.contact.wa;el('lang_default').value=D.lang_default||'id';
+ el('h_name').value=D.hero.name;el('h_role_id').value=D.hero.role_id;el('h_role_en').value=D.hero.role_en;el('h_con_id').value=D.hero.connector_id;el('h_con_en').value=D.hero.connector_en;el('h_tag_id').value=D.hero.tagline_id;el('h_tag_en').value=D.hero.tagline_en;
+ el('bni_chapter').value=D.bni.chapter;el('bni_klas_id').value=D.bni.klasifikasi_id;el('bni_klas_en').value=D.bni.klasifikasi_en;el('bni_status').value=L(D.bni.status);el('bni_since_id').value=D.bni.since_id||'';el('bni_since_en').value=D.bni.since_en||'';el('bni_peran_id').value=D.bni.peran_id;el('bni_peran_en').value=D.bni.peran_en;
+ el('b_nama').value=D.bisnis.nama;el('b_legal').value=D.bisnis.legal;el('b_lay_id').value=D.bisnis.layanan_id;el('b_lay_en').value=D.bisnis.layanan_en;el('b_th_id').value=D.bisnis.tahun_id;el('b_th_en').value=D.bisnis.tahun_en;el('b_prod_id').value=D.bisnis.produk_id||'';el('b_prod_en').value=D.bisnis.produk_en||'';el('b_solve_id').value=D.bisnis.solve_id||'';el('b_solve_en').value=D.bisnis.solve_en||'';el('b_web').value=D.bisnis.website;el('b_video').value=D.bisnis.video||'';el('b_phases').value=J(D.bisnis.phases||[],['name_id','name_en','desc_id','desc_en']);el('b_gallery').value=L(D.bisnis.gallery);
+ TIERKEYS.forEach(function(t){var k=t[0],x=D.tiers[k];el('t_'+k+'_apa_id').value=x.apa_id;el('t_'+k+'_apa_en').value=x.apa_en;el('t_'+k+'_siapa_id').value=x.siapa_id;el('t_'+k+'_siapa_en').value=x.siapa_en;el('t_'+k+'_kw_id').value=L(x.keywords_id);el('t_'+k+'_kw_en').value=L(x.keywords_en);el('t_'+k+'_scr_id').value=x.script_id;el('t_'+k+'_scr_en').value=x.script_en;});
+ el('bg_personal').value=J(D.biogains.personal,['k_id','k_en','v_id','v_en']);
+ el('bg_drive').value=J(D.biogains.drive,['k_id','k_en','v_id','v_en']);
+ el('bg_gains').value=J(D.biogains.gains,['letter','title_id','title_en','desc_id','desc_en']);
+ el('bg_gallery').value=L(D.biogains.gallery);
+ el('sp_top3').value=J(D.sphere.top3,['nama_id','nama_en','why_id','why_en']);
+ el('sp_oth_id').value=L(D.sphere.others_id);el('sp_oth_en').value=L(D.sphere.others_en);
+ el('cl_top').value=J(D.clients.top,['nama','src']);el('cl_logos').value=L(D.clients.logos);
+  el('cl_good_id').value=L(D.clients.good_id);el('cl_good_en').value=L(D.clients.good_en);
+ el('cl_bad_id').value=L(D.clients.bad_id);el('cl_bad_en').value=L(D.clients.bad_en);
+ el('r_who_id').value=L(D.refer&&D.refer.who_id);el('r_who_en').value=L(D.refer&&D.refer.who_en);
+}
+
+function collect(){
+ var D={lang_default:el('lang_default').value.trim()||'id',
+  images:{cover:el('img_cover').value.trim(),hero:el('img_hero').value.trim()},
+  contact:{wa:el('wa').value.trim()},
+  hero:{name:el('h_name').value,role_id:el('h_role_id').value,role_en:el('h_role_en').value,connector_id:el('h_con_id').value,connector_en:el('h_con_en').value,tagline_id:el('h_tag_id').value,tagline_en:el('h_tag_en').value},
+  bni:{chapter:el('bni_chapter').value,klasifikasi_id:el('bni_klas_id').value,klasifikasi_en:el('bni_klas_en').value,status:A('bni_status'),since_id:el('bni_since_id').value,since_en:el('bni_since_en').value,peran_id:el('bni_peran_id').value,peran_en:el('bni_peran_en').value},
+  bisnis:{nama:el('b_nama').value,legal:el('b_legal').value,layanan_id:el('b_lay_id').value,layanan_en:el('b_lay_en').value,tahun_id:el('b_th_id').value,tahun_en:el('b_th_en').value,produk_id:el('b_prod_id').value,produk_en:el('b_prod_en').value,solve_id:el('b_solve_id').value,solve_en:el('b_solve_en').value,website:el('b_web').value,gallery:A('b_gallery'),video:el('b_video').value.trim(),phases:P('b_phases',['name_id','name_en','desc_id','desc_en'])},
+  tiers:{},
+  biogains:{personal:P('bg_personal',['k_id','k_en','v_id','v_en']),drive:P('bg_drive',['k_id','k_en','v_id','v_en']),gains:P('bg_gains',['letter','title_id','title_en','desc_id','desc_en']),gallery:A('bg_gallery')},
+  sphere:{top3:P('sp_top3',['nama_id','nama_en','why_id','why_en']),others_id:A('sp_oth_id'),others_en:A('sp_oth_en')},
+  clients:{top:P('cl_top',['nama','src']),logos:A('cl_logos'),good_id:A('cl_good_id'),good_en:A('cl_good_en'),bad_id:A('cl_bad_id'),bad_en:A('cl_bad_en')},
+  refer:{who_id:A('r_who_id'),who_en:A('r_who_en')}
+ };
+ TIERKEYS.forEach(function(t){var k=t[0];D.tiers[k]={apa_id:el('t_'+k+'_apa_id').value,apa_en:el('t_'+k+'_apa_en').value,siapa_id:el('t_'+k+'_siapa_id').value,siapa_en:el('t_'+k+'_siapa_en').value,keywords_id:A('t_'+k+'_kw_id'),keywords_en:A('t_'+k+'_kw_en'),script_id:el('t_'+k+'_scr_id').value,script_en:el('t_'+k+'_scr_en').value};});
+ return D;
+}
+
+var idToken='',ME=null;
+var ERR={auth:'Sesi habis, silakan masuk lagi.',bad_invite:'Kode undangan tidak valid atau sudah dipakai.',bad_slug:'Nama link tidak valid. Pakai 3-30 huruf kecil, angka, atau tanda minus.',slug_taken:'Nama link sudah dipakai orang lain.',name_required:'Nama wajib diisi.',already_registered:'Akun ini sudah terdaftar.',too_large:'Data atau foto terlalu besar.',too_many_files:'Batas jumlah foto tercapai.',bad_type:'Format foto harus JPG, PNG, atau WebP.',blocked:'Akun ini dinonaktifkan.',not_registered:'Akun belum terdaftar.'};
+function msg(r){return (r&&ERR[r.error])||'Terjadi kesalahan. Coba lagi.';}
+function api(action,payload){
+ var body=Object.assign({action:action,idToken:idToken},payload||{});
+ return fetch(BG.api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json();});
+}
+function show(id,on){el(id).hidden=!on;}
+function relogin(text){idToken='';ME=null;show('c_login',true);show('c_register',false);show('editor',false);show('barr',false);el('e_login').textContent=text||'';}
+
+function onCred(resp){
+ idToken=resp.credential;el('e_login').textContent='Memeriksa akun...';
+ api('me').then(function(r){
+  if(!r.ok){relogin(msg(r));return;}
+  show('c_login',false);el('e_login').textContent='';
+  if(!r.registered){
+   show('c_register',true);el('reg_as').textContent='Masuk sebagai '+r.email+'.'+(r.registration==='invite'?' Pendaftaran saat ini hanya dengan kode undangan.':'');
+   return;
+  }
+  ME=r;enterEditor(r);
+ }).catch(function(){relogin('Tidak bisa menghubungi server.');});
+}
+
+function enterEditor(r){
+ show('c_register',false);show('editor',true);show('barr',true);
+ fill(mergeT(BG_TEMPLATE,r.data||{}));
+ var p=el('pubpill');p.textContent=r.public?'Tampil di direktori':'Belum di direktori';p.className='pill'+(r.public?' ok':'');
+}
+
+function mergeT(t,d){
+ if(Array.isArray(t))return Array.isArray(d)?d:t;
+ if(t&&typeof t==='object'){var o={},k;for(k in t)o[k]=mergeT(t[k],d&&typeof d==='object'?d[k]:undefined);if(d&&typeof d==='object')for(k in d)if(!(k in t))o[k]=d[k];return o;}
+ return (d!=null&&typeof d===typeof t)?d:t;
+}
+
+function mineUrl(){return location.origin+location.pathname.replace(/[^\/]*$/,'')+'index.html?u='+encodeURIComponent(ME.slug);}
+function openMine(){if(ME)window.open(mineUrl(),'_blank');}
+function copyMine(){if(!ME)return;var u=mineUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast('Link disalin');},function(){prompt('Salin link ini:',u);});}
+
+el('rg_slug').addEventListener('input',function(){
+ var v=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'');this.value=v;
+ el('rg_preview').textContent=v?('Link Anda: '+location.origin+location.pathname.replace(/[^\/]*$/,'')+'index.html?u='+v):'';
+});
+
+function doRegister(){
+ el('e_reg').textContent='';
+ var body={invite:el('rg_invite').value.trim(),slug:el('rg_slug').value.trim(),name:el('rg_name').value.trim(),chapter:el('rg_chapter').value.trim(),data:BG_TEMPLATE};
+ if(!body.name||!body.slug){el('e_reg').textContent='Nama dan nama link wajib diisi.';return;}
+ api('register',body).then(function(r){
+  if(!r.ok){if(r.error==='auth')relogin(msg(r));else el('e_reg').textContent=msg(r);return;}
+  return api('me').then(function(m){ME=m;enterEditor(m);toast('Akun dibuat');});
+ }).catch(function(){el('e_reg').textContent='Tidak bisa menghubungi server.';});
+}
+
+function saveAll(){
+ api('save',{data:collect()}).then(function(r){
+  if(r.ok){toast('Tersimpan');}
+  else if(r.error==='auth'){relogin(msg(r));alert(msg(r));}
+  else alert(msg(r));
+ }).catch(function(){alert('Tidak bisa menghubungi server.');});
+}
+
+// Perkecil foto di browser sebelum diunggah (maks 1400px, JPEG).
+function shrink(file){
+ return new Promise(function(res,rej){
+  var img=new Image(),u=URL.createObjectURL(file);
+  img.onload=function(){
+   var m=1400,w=img.width,h=img.height,k=Math.min(1,m/Math.max(w,h));
+   var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+   c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);
+   c.toBlob(function(b){if(!b)return rej(new Error('x'));var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1]);};r.readAsDataURL(b);},'image/jpeg',0.82);
+  };
+  img.onerror=function(){rej(new Error('Bukan gambar'));};
+  img.src=u;
+ });
+}
+function uploadInto(id,multi){
+ var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=!!multi;
+ inp.onchange=function(){
+  var files=[].slice.call(inp.files),chain=Promise.resolve();
+  files.forEach(function(f){chain=chain.then(function(){toast('Mengunggah '+f.name+'...');return shrink(f).then(function(b64){return api('upload',{mime:'image/jpeg',b64:b64});}).then(function(r){
+   if(!r.ok){if(r.error==='auth')relogin(msg(r));throw new Error(msg(r));}
+   var t=el(id);if(multi){t.value=(t.value.trim()?t.value.trim()+'\n':'')+r.url;}else{t.value=r.url;}
+   toast('Foto terunggah. Jangan lupa Simpan.');
+  });});});
+  chain.catch(function(e){alert(e.message||'Gagal mengunggah');});
+ };
+ inp.click();
+}
+
+buildTiers();
+fill(BG_TEMPLATE);
+window.addEventListener('load',function(){
+ if(!BG.clientId){el('e_login').textContent='Konfigurasi belum lengkap (clientId kosong di config.js).';return;}
+ var tries=0;(function init(){
+  if(window.google&&google.accounts&&google.accounts.id){
+   google.accounts.id.initialize({client_id:BG.clientId,callback:onCred});
+   google.accounts.id.renderButton(el('gbtn'),{theme:'outline',size:'large',text:'signin_with',locale:'id'});
+  }else if(tries++<50)setTimeout(init,150);
+  else el('e_login').textContent='Gagal memuat Google Sign-In.';
+ })();
+});
+</script>
+</body>
+</html>

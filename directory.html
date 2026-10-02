@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direktori Bio GAINS</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--red:#CF142B;--ink:#191919;--line:#e4e4e4;--muted:#6E6E6E;--bg:#f4f4f5}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Montserrat',system-ui,sans-serif}
+  body{background:var(--bg);color:var(--ink);padding-bottom:40px}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:16px}
+  header h1{font-size:17px;font-weight:800;max-width:760px;margin:0 auto}
+  header h1 span{color:var(--red)}
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  .tools{display:grid;grid-template-columns:1fr 200px;gap:10px;margin-bottom:14px}
+  input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--red)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  a.card{display:block;background:#fff;border:1px solid var(--line);border-top:3px solid var(--red);border-radius:12px;padding:14px;text-decoration:none;color:inherit}
+  a.card:hover{border-color:var(--red)}
+  .n{font-weight:800;font-size:15px}
+  .c{font-size:11px;font-weight:700;color:var(--red);margin-top:3px}
+  .k{font-size:12.5px;margin-top:8px;line-height:1.4}
+  .t{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+  .empty{color:var(--muted);font-size:13px;padding:30px 0;text-align:center}
+  @media(max-width:520px){.tools{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Bio GAINS <span>· Direktori</span></h1></header>
+<div class="wrap">
+  <div class="tools">
+    <input id="q" placeholder="Cari nama atau klasifikasi bisnis" autocomplete="off">
+    <select id="ch"><option value="">Semua chapter</option></select>
+  </div>
+  <div id="grid" class="grid"></div>
+  <div id="msg" class="empty">Memuat...</div>
+</div>
+<script src="config.js"></script>
+<script>
+var ALL=[];
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function render(){
+ var q=document.getElementById('q').value.trim().toLowerCase(),ch=document.getElementById('ch').value;
+ var list=ALL.filter(function(p){
+  return (!ch||p.chapter===ch)&&(!q||(p.name+' '+p.classification).toLowerCase().indexOf(q)>=0);
+ });
+ document.getElementById('grid').innerHTML=list.map(function(p){
+  return '<a class="card" href="index.html?u='+encodeURIComponent(p.slug)+'"><div class="n">'+esc(p.name)+'</div><div class="c">'+esc(p.chapter)+'</div>'
+   +(p.classification?'<div class="k">'+esc(p.classification)+'</div>':'')
+   +(p.tagline?'<div class="t">'+esc(p.tagline)+'</div>':'')+'</a>';
+ }).join('');
+ var m=document.getElementById('msg');m.style.display=list.length?'none':'block';m.textContent=ALL.length?'Tidak ada hasil.':'Belum ada profil di direktori.';
+}
+fetch(BG.api+'?action=directory').then(function(r){return r.json();}).then(function(r){
+ ALL=(r&&r.list)||[];
+ var chs=[];ALL.forEach(function(p){if(p.chapter&&chs.indexOf(p.chapter)<0)chs.push(p.chapter);});
+ chs.sort();document.getElementById('ch').innerHTML='<option value="">Semua chapter</option>'+chs.map(function(c){return '<option>'+esc(c)+'</option>';}).join('');
+ render();
+}).catch(function(){document.getElementById('msg').textContent='Gagal memuat direktori.';});
+document.getElementById('q').addEventListener('input',render);
+document.getElementById('ch').addEventListener('change',render);
+</script>
+</body>
+</html>

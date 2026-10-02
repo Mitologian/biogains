@@ -21,6 +21,7 @@
   .cover{position:absolute;inset:0;z-index:100;background:linear-gradient(160deg,#D8162E,#A00E20);background-size:cover;background-position:center;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:40px 30px 44px;transition:opacity .5s ease,visibility .5s ease}
   .cover::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(120,8,20,.25) 0%,rgba(120,8,20,.15) 45%,rgba(90,6,16,.86) 100%)}
   .cover.hidden{opacity:0;visibility:hidden}
+  .loading .cover>*{opacity:0;pointer-events:none}
   .cover>*{position:relative;z-index:2}
   .cover-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:rgba(255,255,255,.9)}
   .cover-name{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:64px;line-height:.9;letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;margin:6px 0 0}
@@ -237,8 +238,8 @@
 <body>
 <div class="phone">
   <div class="cover" id="cover">
-    <div class="cover-eyebrow">BNI GROW · Jakarta Barat</div>
-    <div class="cover-name" id="covername">Dedy Dahlan</div>
+    <div class="cover-eyebrow" id="covereyebrow"></div>
+    <div class="cover-name" id="covername"></div>
     <div class="cover-role" id="coverrole"></div>
     <div class="cover-connect" id="coverconnect"></div>
     <div class="cover-title">Bio GAINS</div>
@@ -246,8 +247,8 @@
   </div>
 
   <div class="topbar">
-    <div class="tb-l"><div class="bnilogo"><span class="bni">BNI<span class="reg">®</span></span><span class="grow">GROW</span></div>
-      <div class="tb-name"><div class="t" id="tbname">Dedy Dahlan</div><div class="e">BNI GROW · Bio GAINS</div></div></div>
+    <div class="tb-l"><div class="bnilogo"><span class="bni">BNI<span class="reg">®</span></span><span class="grow" id="bnigrow">GROW</span></div>
+      <div class="tb-name"><div class="t" id="tbname"></div><div class="e" id="tbsub">Bio GAINS</div></div></div>
     <div class="tb-r">
       <button class="qbtn wa" onclick="waMe()" title="WhatsApp" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.5A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.4-.7-1.7-.8s-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4s-.6-1.4-.8-1.9c-.2-.4-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.2 5 5 0 0 0 1.1 2.7 11.4 11.4 0 0 0 4.3 3.8c1.6.7 1.9.6 2.3.5a2.4 2.4 0 0 0 1.6-1.1c.2-.5.2-.9.1-1z"/></svg></button>
       <button class="qbtn share" onclick="shareLink(this)" title="Save / Share link" aria-label="Save or share link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
@@ -275,14 +276,18 @@
 
 <div class="lightbox" id="lightbox" onclick="closeLB()"><span class="x">×</span><img id="lbimg" alt=""></div>
 
+<script src="config.js"></script>
+<script src="template.js"></script>
 <script src="data.js"></script>
 <script>
 if(typeof DATA==='undefined'){document.addEventListener('DOMContentLoaded',function(){document.getElementById('infoarea').innerHTML='<p style="padding:20px;color:#a00;font-size:13px">data.js tidak ditemukan. Pastikan data.js ada di folder yang sama dengan index.html.</p>';});}
+var SLUG=(new URLSearchParams(location.search).get('u')||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,30), KS=SLUG?('_'+SLUG):'';
+if(SLUG)document.documentElement.classList.add('loading');
 var lang=(typeof DATA!=='undefined'&&DATA.lang_default)||'id', cur='bni', curTier='bread';
 function T(id,en){var v=lang==='id'?id:en,o=lang==='id'?en:id;var empty=(v==null||v===''||(Array.isArray(v)&&v.length===0));return empty?o:v;}
 var read=new Set();
-try{var s=localStorage.getItem('dd_read_v18');if(s)read=new Set(JSON.parse(s));}catch(_){}
-function save(){try{localStorage.setItem('dd_read_v18',JSON.stringify([...read]));}catch(_){}}
+try{var s=localStorage.getItem('dd_read_v18'+KS);if(s)read=new Set(JSON.parse(s));}catch(_){}
+function save(){try{localStorage.setItem('dd_read_v18'+KS,JSON.stringify([...read]));}catch(_){}}
 
 var ICON={
  bni:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 8 22l4-2 4 2-1-7.5"/></svg>',
@@ -319,7 +324,7 @@ function blocks(b){
   +'<div class="kv"><div class="k">'+T('Peran Lain','Other Role')+'</div><div class="v">'+T(D.bni.peran_id,D.bni.peran_en)+'</div></div>'
   +((D.bni.since_id||D.bni.since_en)?'<div class="kv"><div class="k">'+T('Member Sejak','Member Since')+'</div><div class="v">'+T(D.bni.since_id,D.bni.since_en)+'</div></div>':'');
  if(b==='bisnis')return ''
-  +'<div class="kv"><div class="k">'+T('Bisnis','Business')+'</div><div class="v">'+D.bisnis.nama+' <span class="sm">· '+D.bisnis.legal+'</span></div></div>'
+  +'<div class="kv"><div class="k">'+T('Bisnis','Business')+'</div><div class="v">'+D.bisnis.nama+(D.bisnis.legal?' <span class="sm">· '+D.bisnis.legal+'</span>':'')+'</div></div>'
   +'<div class="kv"><div class="k">'+T('Pengalaman','Years')+'</div><div class="v">'+T(D.bisnis.tahun_id,D.bisnis.tahun_en)+'</div></div>'
   +'<div class="kv"><div class="k">'+T('Yang Kami Lakukan','What We Do')+'</div><div class="v">'+T(D.bisnis.layanan_id,D.bisnis.layanan_en)+'</div></div>'
   +((D.bisnis.solve_id||D.bisnis.solve_en)?'<div class="kv"><div class="k">'+T('Masalah yang Kami Bereskan','What We Solve')+'</div><div class="v">'+T(D.bisnis.solve_id,D.bisnis.solve_en)+'</div></div>':'')
@@ -425,16 +430,16 @@ function updateProgress(){
  var k;if(pct<40)k=['Kenali saya','Get to know me'];else if(pct<100)k=['Makin kenal 👍','Getting to know me 👍'];else k=['Anda kenal saya!','You know me!'];
  document.getElementById('plabel').textContent=T(k[0],k[1]);
  var already=document.getElementById('referbar').classList.contains('show');
- if(pct===100){try{localStorage.setItem('dd_refer_unlocked','1');}catch(_){}}
+ if(pct===100){try{localStorage.setItem('dd_refer_unlocked'+KS,'1');}catch(_){}}
  var un=(pct===100)||isUnlocked();
  showReferbar(un);
  if(un&&!already){var rb=document.getElementById('referbar');rb.classList.add('pop');setTimeout(function(){rb.classList.remove('pop');},520);}
 }
-function isUnlocked(){try{return localStorage.getItem('dd_refer_unlocked')==='1';}catch(_){return false;}}
+function isUnlocked(){try{return localStorage.getItem('dd_refer_unlocked'+KS)==='1';}catch(_){return false;}}
 function showReferbar(on){var pb=document.getElementById('progblock'),rb=document.getElementById('referbar');if(!pb||!rb)return;if(on){pb.style.display='none';rb.classList.add('show');}else{pb.style.display='';rb.classList.remove('show');}}
 function enterApp(){var c=document.getElementById('cover');if(c)c.classList.add('hidden');
- var seen=false;try{seen=localStorage.getItem('dd_wa_seen')==='1';}catch(_){}
- if(!seen){try{localStorage.setItem('dd_wa_seen','1');}catch(_){}setTimeout(function(){waMe('auto');},450);}
+ var seen=false;try{seen=localStorage.getItem('dd_wa_seen'+KS)==='1';}catch(_){}
+ if(!seen){try{localStorage.setItem('dd_wa_seen'+KS,'1');}catch(_){}setTimeout(function(){waMe('auto');},450);}
 }
 function fitCoverName(){var el=document.getElementById('covername');if(!el)return;var cover=el.parentNode;var cs=getComputedStyle(cover);var avail=cover.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);if(avail<=0)return;el.style.fontSize='100px';var natural=el.scrollWidth||el.getBoundingClientRect().width;if(!natural)return;var size=100*(avail*0.99)/natural;size=Math.max(30,Math.min(size,98));el.style.fontSize=size+'px';}
 window.addEventListener('resize',fitCoverName);
@@ -455,7 +460,7 @@ function waMe(src){
  setTimeout(function(){var n=document.getElementById('wa_name');if(n)n.focus();},60);
 }
 // Isi dengan URL Web App dari Google Apps Script (lihat apps-script.gs). Kosong = tidak kirim ke sheet.
-var SHEET_URL='https://script.google.com/macros/s/AKfycbx5otm4yiEbpkbIh5FgIN0QZtknzuBoY8bzfEdy254lCDRkmYtzUtf_c80-qeHzkTXV/exec';
+var SHEET_URL=(window.BG&&BG.api)||'';
 function logToSheet(d){
  if(!SHEET_URL||!(d.name||d.chapter||d.classification))return;
  try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).catch(function(){});}catch(_){}
@@ -465,17 +470,18 @@ function waSend(){
  var wa=(DATA.contact&&DATA.contact.wa)?DATA.contact.wa:'';
  var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
  var name=g('wa_name'),chap=g('wa_chapter'),cls=g('wa_class');
+ var first=((DATA.hero&&DATA.hero.name)||'').split(' ')[0]||'there';
  var msg=(lang==='id')
-  ? 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nNama: '+name+'\nBNI Chapter: '+chap+'\nKlasifikasi Bisnis: '+cls
-  : 'Hi Dedy! I just saw your Bio GAINS and would love to connect.\n\nName: '+name+'\nBNI Chapter: '+chap+'\nBusiness Classification: '+cls;
- logToSheet({name:name,chapter:chap,classification:cls,lang:lang,source:window.__waSrc||'button',page:location.href.split('#')[0]});
+  ? 'Hi '+first+'! I just saw your Bio GAINS and would love to connect.\n\nNama: '+name+'\nBNI Chapter: '+chap+'\nKlasifikasi Bisnis: '+cls
+  : 'Hi '+first+'! I just saw your Bio GAINS and would love to connect.\n\nName: '+name+'\nBNI Chapter: '+chap+'\nBusiness Classification: '+cls;
+ logToSheet({action:SLUG?'contact':undefined,owner:SLUG||undefined,name:name,chapter:chap,classification:cls,lang:lang,source:window.__waSrc||'button',page:location.href.split('#')[0]});
  window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
  waClose();
 }
 function shareLink(btn){
  var D=DATA;
  var url=(location&&location.href)?location.href.split('#')[0]:(D.bisnis&&D.bisnis.website?('https://'+D.bisnis.website.replace(/^https?:\/\//,'')):'');
- var title='Bio GAINS - '+(D.hero&&D.hero.name?D.hero.name:'Dedy Dahlan');
+ var title='Bio GAINS - '+(D.hero&&D.hero.name?D.hero.name:'Bio GAINS');
  var text=title+' - keep this link so you can find me again.';
  if(navigator.share){
    navigator.share({title:title,text:text,url:url}).catch(function(){});
@@ -498,6 +504,12 @@ function applyStatic(){
  document.getElementById('coverrole').textContent=T(D.hero.role_id,D.hero.role_en);
  var cc=document.getElementById('coverconnect');if(cc)cc.textContent=T(D.hero.connector_id,D.hero.connector_en);
  document.getElementById('covername').textContent=D.hero.name;
+ var ch=(D.bni&&D.bni.chapter)||'';
+ document.getElementById('covereyebrow').textContent=ch;
+ var gm=ch.match(/^BNI\s+([^·]+?)\s*(?:·|$)/i);var bg=document.getElementById('bnigrow');if(bg)bg.textContent=gm?gm[1].toUpperCase():(ch?'':bg.textContent);
+ var ts=document.getElementById('tbsub');if(ts)ts.textContent=(gm?'BNI '+gm[1].toUpperCase()+' · ':'')+'Bio GAINS';
+ if(SLUG&&D.hero.name)document.title=D.hero.name+' · Bio GAINS';
+ document.documentElement.classList.remove('loading');
  fitCoverName();
  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fitCoverName);}
  document.getElementById('tbname').textContent=D.hero.name;
@@ -518,7 +530,47 @@ function init(){
  pick('bni',document.querySelector('.tile[data-b="bni"]'));
  updateProgress();
 }
-if(typeof DATA!=='undefined')init();
+
+function mergeT(t,d){
+ if(Array.isArray(t))return Array.isArray(d)?d:t;
+ if(t&&typeof t==='object'){var o={},k;for(k in t)o[k]=mergeT(t[k],d&&typeof d==='object'?d[k]:undefined);if(d&&typeof d==='object')for(k in d)if(!(k in t))o[k]=d[k];return o;}
+ return (d!=null&&typeof d===typeof t)?d:t;
+}
+// Teks dari profil orang lain dirender lewat innerHTML. Hanya <em>, <mark>, <b> yang diizinkan, URL gambar divalidasi.
+var URL_RE=/^(?:img\/[\w.\-\/]{1,100}|https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]{10,80}(?:&sz=w\d{3,4})?|https:\/\/lh3\.googleusercontent\.com\/d\/[\w-]{10,80}(?:=w\d{3,4})?)$/;
+function cleanStr(s){return String(s).replace(/<(?!\/?(?:em|mark|b)>)/gi,'&lt;');}
+function cleanDeep(v,d){
+ if(d>6)return '';
+ if(typeof v==='string')return cleanStr(v);
+ if(Array.isArray(v))return v.map(function(x){return cleanDeep(x,d+1);});
+ if(v&&typeof v==='object'){var o={};Object.keys(v).forEach(function(k){if(k!=='__proto__'&&k!=='constructor'&&k!=='prototype')o[k]=cleanDeep(v[k],d+1);});return o;}
+ return v;
+}
+function cleanUrl(u){u=String(u||'').trim();return URL_RE.test(u)?u:'';}
+function cleanProfile(raw){
+ var o=cleanDeep(raw,0);
+ o.images={cover:cleanUrl(o.images&&o.images.cover),hero:cleanUrl(o.images&&o.images.hero)};
+ ['bisnis','biogains'].forEach(function(k){o[k]=o[k]||{};o[k].gallery=(o[k].gallery||[]).map(cleanUrl).filter(Boolean);});
+ o.clients=o.clients||{};o.clients.logos=(o.clients.logos||[]).map(cleanUrl).filter(Boolean);
+ o.contact={wa:String((o.contact&&o.contact.wa)||'').replace(/\D/g,'').slice(0,16)};
+ return o;
+}
+function showFatal(msg){
+ document.documentElement.classList.remove('loading');
+ var c=document.getElementById('cover');if(c)c.classList.add('hidden');
+ document.getElementById('infoarea').innerHTML='<p style="padding:24px 20px;font-size:14px;line-height:1.6">'+msg+'</p>';
+}
+function loadRemote(){
+ if(!window.BG||!BG.api){showFatal('Konfigurasi belum lengkap.');return;}
+ fetch(BG.api+'?action=profile&u='+encodeURIComponent(SLUG)).then(function(r){return r.json();}).then(function(res){
+  if(!res||!res.ok){showFatal('Profil <b>'+SLUG+'</b> tidak ditemukan.');return;}
+  window.DATA=mergeT(window.BG_TEMPLATE,cleanProfile(res.data));
+  lang=DATA.lang_default==='en'?'en':'id';
+  document.getElementById('lid').classList.toggle('on',lang==='id');document.getElementById('len').classList.toggle('on',lang==='en');document.documentElement.lang=lang;
+  init();
+ }).catch(function(){showFatal('Gagal memuat profil. Coba muat ulang halaman.');});
+}
+if(SLUG)loadRemote();else if(typeof DATA!=='undefined')init();
 </script>
 </body>
 </html>
