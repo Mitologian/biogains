@@ -60,6 +60,15 @@
   .sharemenu button:active,.sharemenu button:hover{background:#f3f3f4}
   .sharemenu svg{width:18px;height:18px;color:var(--orange);flex-shrink:0}
   .sharemenu .sub{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:1px}
+  .savehint{position:fixed;inset:0;z-index:280;pointer-events:none;transition:opacity .2s}
+  .savehint.out{opacity:0}
+  .savering{position:fixed;border-radius:50%;border:3px solid var(--orange);box-shadow:0 0 0 0 rgba(207,20,43,.45);animation:savering 1.3s ease-out infinite}
+  .savebub{position:fixed;background:#1a1a1a;color:#fff;font-weight:700;font-size:13.5px;line-height:1.3;padding:11px 15px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap;animation:savein .3s ease}
+  .savearr{position:fixed;width:12px;height:12px;background:#1a1a1a;transform:rotate(45deg);border-radius:2px;animation:savein .3s ease}
+  @keyframes savering{0%{box-shadow:0 0 0 0 rgba(207,20,43,.5)}100%{box-shadow:0 0 0 14px rgba(207,20,43,0)}}
+  @keyframes savein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .savearr{animation-name:savein2}
+  @keyframes savein2{from{opacity:0}to{opacity:1}}
   .insthelp{position:fixed;inset:0;z-index:260;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
   .insthelp.show{display:flex}
   .insthelp .box{background:#fff;width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:20px 20px calc(22px + env(safe-area-inset-bottom));font-size:14px;line-height:1.55}
@@ -453,6 +462,7 @@ function showReferbar(on){var pb=document.getElementById('progblock'),rb=documen
 function enterApp(){var c=document.getElementById('cover');if(c)c.classList.add('hidden');
  var seen=false;try{seen=localStorage.getItem('dd_wa_seen')==='1';}catch(_){}
  if(!seen){try{localStorage.setItem('dd_wa_seen','1');}catch(_){}setTimeout(function(){waMe('auto');},450);}
+ else scheduleSaveHint();
 }
 function fitCoverName(){var el=document.getElementById('covername');if(!el)return;var cover=el.parentNode;var cs=getComputedStyle(cover);var avail=cover.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);if(avail<=0)return;el.style.fontSize='100px';var natural=el.scrollWidth||el.getBoundingClientRect().width;if(!natural)return;var size=100*(avail*0.99)/natural;size=Math.max(30,Math.min(size,98));el.style.fontSize=size+'px';}
 window.addEventListener('resize',fitCoverName);
@@ -478,7 +488,7 @@ function logToSheet(d){
  if(!SHEET_URL||!(d.name||d.chapter||d.classification))return;
  try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).catch(function(){});}catch(_){}
 }
-function waClose(){var m=document.getElementById('wamodal');if(m)m.classList.remove('show');}
+function waClose(){var m=document.getElementById('wamodal');var wasOpen=m&&m.classList.contains('show');if(m)m.classList.remove('show');if(wasOpen)scheduleSaveHint();}
 function waSend(){
  var wa=(DATA.contact&&DATA.contact.wa)?DATA.contact.wa:'';
  var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
@@ -489,7 +499,6 @@ function waSend(){
  logToSheet({name:name,chapter:chap,classification:cls,lang:lang,source:window.__waSrc||'button',page:location.href.split('#')[0]});
  window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
  waClose();
- afterSendInstall();
 }
 // ----- Share / Save (install) -----
 var deferredInstall=null;
@@ -520,30 +529,45 @@ function showInstallHelp(){
  m.classList.add('show');
 }
 
-// Aksi ketiga setelah kirim WhatsApp. Browser hanya mengizinkan prompt pasang dari tap pengguna,
-// dan WhatsApp sudah memakai tap itu. Jika prompt ditolak, tawarkan sekali saat pengguna kembali ke halaman ini.
-var offerPending=false;
-function afterSendInstall(){
- if(isInstalled())return;
- var mobile=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
- if(deferredInstall){
-  installApp().then(function(r){if(r==='refused'&&mobile)offerPending=true;});
- }else if(mobile)offerPending=true;
+// ----- Petunjuk "Simpan untuk dibaca nanti" -----
+// Muncul sekali per perangkat setelah form WhatsApp ditutup (kirim atau batal), atau saat masuk app
+// kalau form tidak dibuka otomatis. Hilang saat pengguna menyentuh bagian mana pun dari layar.
+var hintEl=null,hintTimer=null;
+function hintSeen(){try{return localStorage.getItem('dd_hint_save')==='1';}catch(_){return false;}}
+function scheduleSaveHint(){
+ if(hintSeen()||hintEl||hintTimer)return;
+ hintTimer=setTimeout(function(){hintTimer=null;showSaveHint();},500);
 }
-function offerSeen(){try{return localStorage.getItem('dd_inst_offer')==='1';}catch(_){return false;}}
-document.addEventListener('visibilitychange',function(){
- if(document.visibilityState!=='visible'||!offerPending||isInstalled()||offerSeen())return;
- offerPending=false;
- try{localStorage.setItem('dd_inst_offer','1');}catch(_){}
- showInstallOffer();
-});
-function showInstallOffer(){
- var m=document.getElementById('insthelp');
- if(!m){m=document.createElement('div');m.id='insthelp';m.className='insthelp';m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('show');});document.body.appendChild(m);}
- m.innerHTML='<div class="box"><h3>'+T('Simpan My Biogains di HP Anda?','Save My Biogains on your phone?')+'</h3><div>'+T('Supaya mudah dibuka lagi kapan saja, tanpa mencari link.','So you can open it again any time, without looking for the link.')+'</div>'
-  +'<div style="height:14px"></div><button onclick="document.getElementById(\'insthelp\').classList.remove(\'show\');installApp()">'+T('Simpan di HP','Save to phone')+'</button>'
-  +'<button style="background:none;color:#6E6E6E;margin-top:4px" onclick="document.getElementById(\'insthelp\').classList.remove(\'show\')">'+T('Nanti saja','Not now')+'</button></div>';
- m.classList.add('show');
+function placeSaveHint(){
+ if(!hintEl)return;
+ var btn=document.getElementById('sharebtn');if(!btn)return;
+ var r=btn.getBoundingClientRect(),vw=document.documentElement.clientWidth;
+ var ring=hintEl.querySelector('.savering'),bub=hintEl.querySelector('.savebub'),arr=hintEl.querySelector('.savearr');
+ ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px';
+ var bw=bub.offsetWidth,left=Math.max(8,Math.min(r.right-bw,vw-bw-8));
+ bub.style.left=left+'px';bub.style.top=(r.bottom+16)+'px';
+ arr.style.left=Math.max(left+14,Math.min(r.left+r.width/2-6,left+bw-26))+'px';arr.style.top=(r.bottom+10)+'px';
+}
+function showSaveHint(){
+ var btn=document.getElementById('sharebtn');
+ if(!btn||hintSeen()||hintEl)return;
+ var cover=document.getElementById('cover');if(cover&&!cover.classList.contains('hidden'))return;
+ var wm=document.getElementById('wamodal');if(wm&&wm.classList.contains('show'))return;
+ try{localStorage.setItem('dd_hint_save','1');}catch(_){}
+ hintEl=document.createElement('div');hintEl.id='savehint';hintEl.className='savehint';
+ hintEl.innerHTML='<div class="savering"></div><div class="savearr"></div><div class="savebub">'+T('Simpan untuk dibaca nanti','Save to read later')+'</div>';
+ document.body.appendChild(hintEl);
+ placeSaveHint();window.addEventListener('resize',placeSaveHint);
+ // pasang pendengar sedikit terlambat supaya tap yang menutup form tidak langsung menghapusnya
+ setTimeout(function(){
+  ['pointerdown','touchstart','mousedown','keydown'].forEach(function(ev){document.addEventListener(ev,hideSaveHint,true);});
+ },600);
+}
+function hideSaveHint(){
+ if(!hintEl)return;
+ ['pointerdown','touchstart','mousedown','keydown'].forEach(function(ev){document.removeEventListener(ev,hideSaveHint,true);});
+ window.removeEventListener('resize',placeSaveHint);
+ var el=hintEl;hintEl=null;el.classList.add('out');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},220);
 }
 
 function shareMenu(btn){
