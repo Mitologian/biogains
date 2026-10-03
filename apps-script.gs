@@ -2,8 +2,8 @@
 // Pasang di Sheet: Extensions > Apps Script. Lalu Deploy > New deployment > Web app
 // (Execute as: Me, Who has access: Anyone). Salin URL /exec ke SHEET_URL di index.html.
 // Setelah mengubah file ini: Deploy > Manage deployments > Edit > Version: New version.
-var SHEET_NAME = 'Contacts Dedy';  // tab tujuan isian form
-var OLD_SHEET_NAME = 'Leads';      // nama lama. Jika masih ada dan tab baru belum ada, otomatis diganti nama.
+var SHEET_NAME = 'Contacts';                         // tab tujuan isian form
+var OLD_SHEET_NAMES = ['Contacts Dedy', 'Leads'];    // nama lama. Jika salah satunya ada dan 'Contacts' belum ada, otomatis diganti nama.
 
 function doPost(e) {
   var d = {};
@@ -12,9 +12,11 @@ function doPost(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) {
-    var old = ss.getSheetByName(OLD_SHEET_NAME);
-    if (old) { old.setName(SHEET_NAME); sh = old; }
-    else sh = ss.insertSheet(SHEET_NAME);
+    for (var i = 0; i < OLD_SHEET_NAMES.length && !sh; i++) {
+      var old = ss.getSheetByName(OLD_SHEET_NAMES[i]);
+      if (old) { old.setName(SHEET_NAME); sh = old; }
+    }
+    if (!sh) sh = ss.insertSheet(SHEET_NAME);
   }
   if (sh.getLastRow() === 0) {
     sh.appendRow(['Timestamp', 'Name', 'BNI Chapter', 'Business Classification', 'Lang', 'Source', 'Page']);

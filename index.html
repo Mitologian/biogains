@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#CF142B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Bio GAINS">
+<meta name="apple-mobile-web-app-title" content="My Biogains">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -516,7 +516,7 @@ function showInstallHelp(){
  var steps=IS_IOS
   ?'<ol><li>'+T('Ketuk tombol <b>Bagikan</b> di bawah layar Safari.','Tap the <b>Share</b> button at the bottom of Safari.')+'</li><li>'+T('Pilih <b>Tambah ke Layar Utama</b>.','Choose <b>Add to Home Screen</b>.')+'</li></ol>'
   :'<ol><li>'+T('Buka halaman ini di <b>Chrome</b> atau <b>Safari</b> (bukan di dalam WhatsApp atau Instagram).','Open this page in <b>Chrome</b> or <b>Safari</b> (not inside WhatsApp or Instagram).')+'</li><li>'+T('Buka menu browser, lalu pilih <b>Instal aplikasi</b> atau <b>Tambahkan ke layar utama</b>.','Open the browser menu, then choose <b>Install app</b> or <b>Add to Home screen</b>.')+'</li></ol>';
- m.innerHTML='<div class="box"><h3>'+T('Simpan Bio GAINS di HP Anda','Save Bio GAINS on your phone')+'</h3><div>'+T('Supaya mudah dibuka lagi kapan saja.','So you can open it again any time.')+'</div>'+steps+'<button onclick="document.getElementById(\'insthelp\').classList.remove(\'show\')">OK</button></div>';
+ m.innerHTML='<div class="box"><h3>'+T('Simpan My Biogains di HP Anda','Save My Biogains on your phone')+'</h3><div>'+T('Supaya mudah dibuka lagi kapan saja.','So you can open it again any time.')+'</div>'+steps+'<button onclick="document.getElementById(\'insthelp\').classList.remove(\'show\')">OK</button></div>';
  m.classList.add('show');
 }
 
@@ -540,7 +540,7 @@ document.addEventListener('visibilitychange',function(){
 function showInstallOffer(){
  var m=document.getElementById('insthelp');
  if(!m){m=document.createElement('div');m.id='insthelp';m.className='insthelp';m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('show');});document.body.appendChild(m);}
- m.innerHTML='<div class="box"><h3>'+T('Simpan Bio GAINS di HP Anda?','Save Bio GAINS on your phone?')+'</h3><div>'+T('Supaya mudah dibuka lagi kapan saja, tanpa mencari link.','So you can open it again any time, without looking for the link.')+'</div>'
+ m.innerHTML='<div class="box"><h3>'+T('Simpan My Biogains di HP Anda?','Save My Biogains on your phone?')+'</h3><div>'+T('Supaya mudah dibuka lagi kapan saja, tanpa mencari link.','So you can open it again any time, without looking for the link.')+'</div>'
   +'<div style="height:14px"></div><button onclick="document.getElementById(\'insthelp\').classList.remove(\'show\');installApp()">'+T('Simpan di HP','Save to phone')+'</button>'
   +'<button style="background:none;color:#6E6E6E;margin-top:4px" onclick="document.getElementById(\'insthelp\').classList.remove(\'show\')">'+T('Nanti saja','Not now')+'</button></div>';
  m.classList.add('show');
