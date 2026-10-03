@@ -66,14 +66,14 @@
   .savehint .hveil{position:absolute;inset:0;background:rgba(255,255,255,.40);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:hfade .5s ease both}
   .savehint .hring{position:absolute;border-radius:50%;border:2px solid rgba(207,20,43,.8);animation:hring 1.8s ease-out infinite}
   .savehint .hring.two{animation-delay:.9s}
-  .savehint .htext{position:absolute;text-align:center;font-weight:400;font-size:15px;line-height:1.35;color:#2a2a30;text-shadow:0 0 6px rgba(255,255,255,.95),0 0 12px rgba(255,255,255,.8);animation:htin .6s ease .15s both}
-  .savehint .htext small{display:block;font-weight:400;font-size:12px;color:#5f5f68;margin-top:3px}
-  .savehint .harr{position:absolute;width:22px;height:22px;color:var(--orange);animation:harr 1.2s ease-in-out infinite}
+  .savehint .hbwrap{position:absolute;width:max-content;max-width:min(168px,calc(100vw - 24px));filter:drop-shadow(0 8px 18px rgba(20,20,30,.22));animation:hin .5s cubic-bezier(.2,.9,.3,1.2) .15s both,hbob 2.6s ease-in-out .65s infinite}
+  .savehint .hbub{position:relative;background:#fff;color:#2a2a30;font-weight:400;font-size:15px;line-height:1.4;text-align:center;padding:11px 16px;border-radius:16px;text-wrap:balance}
+  .savehint .htail{position:absolute;top:-6px;width:14px;height:14px;background:#fff;transform:rotate(45deg);border-radius:3px 0 0 0}
   @keyframes hfade{from{opacity:0}to{opacity:1}}
   @keyframes hring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(2.4);opacity:0}}
-  @keyframes htin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  @keyframes harr{0%,100%{transform:translateY(2px)}50%{transform:translateY(-4px)}}
-  @media (prefers-reduced-motion:reduce){.savehint .hring,.savehint .harr{animation:none}}
+  @keyframes hin{from{opacity:0;transform:translateY(-8px) scale(.92)}to{opacity:1;transform:none}}
+  @keyframes hbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @media (prefers-reduced-motion:reduce){.savehint .hring,.savehint .hbwrap{animation:none}}
   .insthelp{position:fixed;inset:0;z-index:260;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
   .insthelp.show{display:flex}
   .insthelp .box{background:#fff;width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:20px 20px calc(22px + env(safe-area-inset-bottom));font-size:14px;line-height:1.55}
@@ -552,10 +552,10 @@ function placeSaveHint(){
  var m='radial-gradient(circle at '+cx+'px '+cy+'px,transparent '+(r.width*0.7)+'px,#000 '+(r.width*2)+'px)';
  var veil=hintEl.querySelector('.hveil');veil.style.webkitMaskImage=m;veil.style.maskImage=m;
  hintEl.querySelectorAll('.hring').forEach(function(g){var d=r.width+8;g.style.left=(cx-d/2)+'px';g.style.top=(cy-d/2)+'px';g.style.width=d+'px';g.style.height=d+'px';});
- var arr=hintEl.querySelector('.harr'),tx=hintEl.querySelector('.htext');
- arr.style.left=(cx-11)+'px';arr.style.top=(r.bottom+12)+'px';
- var w=tx.offsetWidth,left=Math.max(8,Math.min(cx-w/2,vw-w-8));
- tx.style.left=left+'px';tx.style.top=(r.bottom+42)+'px';
+ var wrap=hintEl.querySelector('.hbwrap'),tail=hintEl.querySelector('.htail');
+ var w=wrap.offsetWidth,left=Math.max(8,Math.min(cx-w/2,vw-w-8));
+ wrap.style.left=left+'px';wrap.style.top=(r.bottom+16)+'px';
+ tail.style.left=Math.max(14,Math.min(cx-left-7,w-28))+'px';
 }
 function showSaveHint(){
  var btn=document.getElementById('sharebtn');
@@ -565,8 +565,7 @@ function showSaveHint(){
  try{localStorage.setItem('dd_hint_save','1');}catch(_){}
  hintEl=document.createElement('div');hintEl.id='savehint';hintEl.className='savehint';
  hintEl.innerHTML='<div class="hveil"></div><div class="hring"></div><div class="hring two"></div>'
-  +'<svg class="harr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>'
-  +'<div class="htext">'+T('Simpan untuk dibaca nanti','Save to read later')+'<small>'+T('Ketuk tombol ini','Tap this button')+'</small></div>';
+  +'<div class="hbwrap"><div class="htail"></div><div class="hbub">'+T('Simpan untuk dibaca nanti','Save to read later')+'</div></div>';
  document.body.appendChild(hintEl);
  placeSaveHint();window.addEventListener('resize',placeSaveHint);
  // pasang pendengar sedikit terlambat supaya tap yang menutup form tidak langsung menghapusnya
