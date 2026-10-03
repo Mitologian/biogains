@@ -40,6 +40,7 @@
   .pill{display:inline-block;font-size:11px;font-weight:800;border-radius:20px;padding:3px 10px;background:#eee;color:#333}
   .pill.ok{background:#e3f6e8;color:#14753a}
   #gbtn{margin-top:12px}
+  .lnk{text-decoration:none;font-family:inherit;font-weight:700;font-size:12.5px;border-radius:9px;padding:9px 14px;display:inline-block}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -50,9 +51,12 @@
     <span class="pill" id="meter"></span>
     <span class="pill" id="savepill"></span>
     <span class="pill" id="pubpill"></span>
-    <button class="btn-s" onclick="openMine()">Lihat halaman</button>
+    <button class="btn-s" onclick="previewDraft()">Pratinjau</button>
+    <button class="btn-s" id="b_view" onclick="openMine()">Lihat halaman</button>
     <button class="btn-s" onclick="copyMine()">Salin link</button>
-    <button class="btn-p" onclick="saveAll()">Simpan</button>
+    <a class="btn-s lnk" href="dashboard.html">Dashboard chapter</a>
+    <button class="btn-s" onclick="saveAll()">Simpan draf</button>
+    <button class="btn-p" onclick="doPublish()">Publish</button>
   </div>
 </div>
 <div class="wrap">
@@ -70,15 +74,15 @@
     <label>Nama link <span class="flag">huruf kecil, angka, tanda minus</span></label><input id="rg_slug" autocomplete="off" placeholder="mis. miky">
     <div class="note" id="rg_preview"></div>
     <label>Nama lengkap</label><input id="rg_name" autocomplete="name">
-    <label>BNI Chapter</label><input id="rg_chapter" placeholder="mis. BNI GROW · Jakarta Barat">
+    <div class="note">Chapter Anda mengikuti kode undangan.</div>
     <div style="margin-top:14px"><button class="btn-p" onclick="doRegister()">Buat akun</button></div>
     <div class="err" id="e_reg"></div>
   </div>
 
   <div id="editor" hidden>
-  <div class="hint">Isi form, lalu tekan <b>Simpan</b> (di kanan atas). Halaman Anda langsung terbarui di link Anda.<br>
+  <div class="hint">Isi form sesuka Anda dan boleh dilanjutkan nanti: tekan <b>Simpan draf</b> kapan saja. Halaman publik Anda <b>baru berubah saat Anda menekan Publish</b>, dan versi lama otomatis tergantikan. Pakai <b>Pratinjau</b> untuk melihat hasilnya dulu.<br>
   Untuk semua daftar bertitik (WHO, Good/Bad Referral, keyword, klien): <b>satu baris = satu bullet</b>. Untuk baris berisi beberapa kolom, pisahkan dengan <code>::</code> (urutan sesuai keterangan di tiap kotak). Foto: tekan tombol <b>Unggah foto</b>, tidak perlu menulis path.<br>
-  Tampil di direktori chapter menunggu persetujuan admin.</div>
+  Setelah dipublish, profil Anda juga tampil di Dashboard chapter, hanya untuk anggota chapter Anda.</div>
 
   <details open><summary>Gambar & Kontak</summary><div class="sec">
     <label>Cover (potret penuh)</label><input id="img_cover" readonly><button class="up" onclick="uploadInto('img_cover',false)">Unggah foto</button>
@@ -96,7 +100,7 @@
   </div></details>
 
   <details><summary>Keanggotaan BNI</summary><div class="sec">
-    <label>Chapter</label><input id="bni_chapter">
+    <label>Chapter <span class="flag">sesuai undangan</span></label><input id="bni_chapter" readonly>
     <div class="two"><div><label>Klasifikasi (ID)</label><input id="bni_klas_id"></div><div><label>Classification (EN)</label><input id="bni_klas_en"></div></div>
     <label>Status (satu per baris)</label><textarea id="bni_status"></textarea>
     <div class="two"><div><label>Member Sejak (ID)</label><input id="bni_since_id"></div><div><label>Member Since (EN)</label><input id="bni_since_en"></div></div>
@@ -206,7 +210,15 @@ var idToken='',ME=null,dirty=false,pendingSave=false;
 function draftKey(){return 'bg_draft_'+(ME?ME.slug:'');}
 function saveDraft(){if(!ME)return;try{localStorage.setItem(draftKey(),JSON.stringify({t:Date.now(),data:collect()}));}catch(_){}}
 function clearDraft(){try{localStorage.removeItem(draftKey());}catch(_){}}
-function setSavePill(){var p=el('savepill');p.textContent=dirty?'Belum disimpan':'Tersimpan';p.className='pill'+(dirty?'':' ok');}
+var ST={published:false,pending:false};
+function setSavePill(){
+ var p=el('savepill'),q=el('pubpill'),t,ok=false;
+ if(dirty){t='Belum disimpan';}else{t='Draf tersimpan';ok=true;}
+ p.textContent=t;p.className='pill'+(ok?' ok':'');
+ q.textContent=!ST.published?'Belum dipublish':((ST.pending||dirty)?'Ada perubahan belum dipublish':'Terpublish');
+ q.className='pill'+(ST.published&&!ST.pending&&!dirty?' ok':'');
+ el('b_view').disabled=!ST.published;
+}
 function markDirty(){dirty=true;saveDraft();setSavePill();updateMeter();}
 function updateMeter(){
  var D=collect(),any=function(a,b){return !!(a||b);},len=function(a,b){return !!((a&&a.length)||(b&&b.length));};
@@ -219,8 +231,8 @@ function updateMeter(){
 document.addEventListener('input',function(e){if(!ME||el('editor').hidden||(e.target.id&&/^rg_/.test(e.target.id)))return;markDirty();});
 window.addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue='';}});
 // Sesi Google habis: form tetap ada, hanya tampilkan tombol masuk lagi.
-function authExpired(){pendingSave=true;idToken='';show('c_login',true);el('e_login').textContent='Sesi habis. Masuk lagi untuk melanjutkan. Perubahan Anda tetap aman di halaman ini.';window.scrollTo(0,0);}
-var ERR={auth:'Sesi habis, silakan masuk lagi.',bad_invite:'Kode undangan tidak valid atau sudah dipakai.',bad_slug:'Nama link tidak valid. Pakai 3-30 huruf kecil, angka, atau tanda minus.',slug_taken:'Nama link sudah dipakai orang lain.',name_required:'Nama wajib diisi.',already_registered:'Akun ini sudah terdaftar.',too_large:'Data atau foto terlalu besar.',too_many_files:'Batas jumlah foto tercapai.',bad_type:'Format foto harus JPG, PNG, atau WebP.',blocked:'Akun ini dinonaktifkan.',not_registered:'Akun belum terdaftar.'};
+function authExpired(){busy=false;idToken='';show('c_login',true);el('e_login').textContent='Sesi habis. Masuk lagi untuk melanjutkan. Perubahan Anda tetap aman di halaman ini.';window.scrollTo(0,0);}
+var ERR={invite_no_chapter:'Kode undangan ini belum terhubung ke chapter. Hubungi admin.',no_chapter:'Akun Anda belum terhubung ke chapter.',auth:'Sesi habis, silakan masuk lagi.',bad_invite:'Kode undangan tidak valid atau sudah dipakai.',bad_slug:'Nama link tidak valid. Pakai 3-30 huruf kecil, angka, atau tanda minus.',slug_taken:'Nama link sudah dipakai orang lain.',name_required:'Nama wajib diisi.',already_registered:'Akun ini sudah terdaftar.',too_large:'Data atau foto terlalu besar.',too_many_files:'Batas jumlah foto tercapai.',bad_type:'Format foto harus JPG, PNG, atau WebP.',blocked:'Akun ini dinonaktifkan.',not_registered:'Akun belum terdaftar.'};
 function msg(r){return (r&&ERR[r.error])||'Terjadi kesalahan. Coba lagi.';}
 function api(action,payload){
  var body=Object.assign({action:action,idToken:idToken},payload||{});
@@ -236,7 +248,7 @@ function onCred(resp){
   if(ME){
    if(r.email!==ME.email){el('e_login').textContent='Akun berbeda. Masuk dengan '+ME.email+'.';return;}
    show('c_login',false);el('e_login').textContent='';toast('Masuk lagi');
-   if(pendingSave){pendingSave=false;saveAll();}
+   if(pendingSave){var w=pendingSave;pendingSave=false;busy=false;if(w==='publish')doPublish(true);else saveAll();}
    return;
   }
   show('c_login',false);el('e_login').textContent='';
@@ -250,6 +262,7 @@ function onCred(resp){
 
 function enterEditor(r){
  show('c_register',false);show('editor',true);show('barr',true);
+ ST.published=!!r.published;ST.pending=!!r.pending;
  fill(mergeT(BG_TEMPLATE,r.data||{}));dirty=false;
  var draft=null;try{draft=JSON.parse(localStorage.getItem(draftKey()));}catch(_){}
  if(draft&&draft.data&&JSON.stringify(draft.data)!==JSON.stringify(collect())){
@@ -257,7 +270,6 @@ function enterEditor(r){
   else clearDraft();
  }
  setSavePill();updateMeter();
- var p=el('pubpill');p.textContent=r.public?'Tampil di direktori':'Belum di direktori';p.className='pill'+(r.public?' ok':'');
 }
 
 function mergeT(t,d){
@@ -266,18 +278,18 @@ function mergeT(t,d){
  return (d!=null&&typeof d===typeof t)?d:t;
 }
 
-function mineUrl(){return location.origin+location.pathname.replace(/[^\/]*$/,'')+'index.html?u='+encodeURIComponent(ME.slug);}
+function mineUrl(){return location.origin+'/'+encodeURIComponent(ME.slug);}
 function openMine(){if(ME)window.open(mineUrl(),'_blank');}
 function copyMine(){if(!ME)return;var u=mineUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast('Link disalin');},function(){prompt('Salin link ini:',u);});}
 
 el('rg_slug').addEventListener('input',function(){
  var v=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'');this.value=v;
- el('rg_preview').textContent=v?('Link Anda: '+location.origin+location.pathname.replace(/[^\/]*$/,'')+'index.html?u='+v):'';
+ el('rg_preview').textContent=v?('Link Anda: '+location.origin+'/'+v):'';
 });
 
 function doRegister(){
  el('e_reg').textContent='';
- var body={invite:el('rg_invite').value.trim(),slug:el('rg_slug').value.trim(),name:el('rg_name').value.trim(),chapter:el('rg_chapter').value.trim(),data:BG_TEMPLATE};
+ var body={invite:el('rg_invite').value.trim(),slug:el('rg_slug').value.trim(),name:el('rg_name').value.trim(),data:BG_TEMPLATE};
  if(!body.name||!body.slug){el('e_reg').textContent='Nama dan nama link wajib diisi.';return;}
  api('register',body).then(function(r){
   if(!r.ok){if(r.error==='auth')relogin(msg(r));else el('e_reg').textContent=msg(r);return;}
@@ -285,12 +297,30 @@ function doRegister(){
  }).catch(function(){el('e_reg').textContent='Tidak bisa menghubungi server.';});
 }
 
+var busy=false;
 function saveAll(){
+ if(busy)return;busy=true;pendingSave='save';
  api('save',{data:collect()}).then(function(r){
-  if(r.ok){dirty=false;clearDraft();setSavePill();toast('Tersimpan');}
+  busy=false;
+  if(r.ok){pendingSave=false;dirty=false;clearDraft();ST.pending=!!r.pending;setSavePill();toast('Draf tersimpan');}
   else if(r.error==='auth'){authExpired();}
-  else alert(msg(r));
- }).catch(function(){alert('Tidak bisa menghubungi server.');});
+  else{pendingSave=false;alert(msg(r));}
+ }).catch(function(){busy=false;alert('Tidak bisa menghubungi server.');});
+}
+function doPublish(skipConfirm){
+ if(busy)return;
+ if(!skipConfirm&&!confirm('Publish sekarang? Halaman publik Anda diganti dengan isi form ini.'))return;
+ busy=true;pendingSave='publish';
+ api('publish',{data:collect()}).then(function(r){
+  busy=false;
+  if(r.ok){pendingSave=false;dirty=false;clearDraft();ST.published=true;ST.pending=false;setSavePill();toast('Dipublish: '+mineUrl());}
+  else if(r.error==='auth'){authExpired();}
+  else{pendingSave=false;alert(msg(r));}
+ }).catch(function(){busy=false;alert('Tidak bisa menghubungi server.');});
+}
+function previewDraft(){
+ try{localStorage.setItem('bg_preview',JSON.stringify(collect()));}catch(_){alert('Browser menolak penyimpanan lokal.');return;}
+ window.open('index.html?preview=1','_blank');
 }
 
 // Perkecil foto di browser sebelum diunggah (maks 1400px, JPEG).

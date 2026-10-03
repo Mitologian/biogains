@@ -3,13 +3,15 @@
 
 // ===== KONFIGURASI =====
 var CLIENT_ID = '';            // Google OAuth Web Client ID (sama dengan clientId di config.js)
-var REGISTRATION = 'invite';   // 'invite' = butuh kode undangan, 'open' = siapa saja boleh daftar
-var LEGACY_SHEET = 'Leads';    // tab tujuan untuk halaman utama (tanpa ?u=), format lama
+var REGISTRATION = 'invite';   // 'invite' = butuh kode undangan, 'open' = siapa saja boleh daftar (tanpa chapter)
+var AUTO_APPROVE = true;       // true = profil otomatis masuk dashboard chapter saat pertama kali publish
+var LEGACY_SHEET = 'Leads';    // tab tujuan untuk halaman utama lama (tanpa slug)
 
-var PROFILE_COLS = ['slug', 'email', 'name', 'chapter', 'classification', 'tagline', 'contacts_tab', 'public', 'status', 'created_at', 'updated_at', 'data'];
-var INVITE_COLS = ['code', 'note', 'used_by', 'used_at'];
+var PROFILE_COLS = ['slug', 'email', 'name', 'chapter_id', 'chapter', 'role', 'classification', 'tagline', 'photo', 'contacts_tab', 'public', 'status', 'created_at', 'updated_at', 'published_at', 'data', 'published'];
+var INVITE_COLS = ['code', 'chapter_id', 'note', 'used_by', 'used_at'];
+var CHAPTER_COLS = ['id', 'name'];
 var CONTACT_COLS = ['Timestamp', 'Name', 'BNI Chapter', 'Business Classification', 'Lang', 'Source', 'Page'];
-var RESERVED = ['admin', 'editor', 'studio', 'directory', 'register', 'login', 'api', 'index', 'img', 'config', 'template', 'data', 'cheatsheet', 'www', 'null', 'undefined'];
+var RESERVED = ['admin', 'editor', 'studio', 'dashboard', 'directory', 'register', 'login', 'api', 'index', 'img', 'config', 'template', 'data', 'cheatsheet', 'www', 'null', 'undefined'];
 var MAX_JSON = 45000;          // batas satu sel Google Sheet adalah 50.000 karakter
 var MAX_UPLOAD_B64 = 1800000;  // sekitar 1,3 MB per foto (browser sudah memperkecil dulu)
 var MAX_FILES_PER_USER = 40;
@@ -20,7 +22,6 @@ function doGet(e) {
   var p = (e && e.parameter) || {};
   try {
     if (p.action === 'profile') return json_(getProfile_(String(p.u || '').toLowerCase()));
-    if (p.action === 'directory') return json_(getDirectory_());
     return json_({ ok: true, service: 'biogains' });
   } catch (err) {
     return json_({ ok: false, error: String(err.message || err) });
@@ -39,7 +40,9 @@ function doPost(e) {
       case 'me': out = me_(d); break;
       case 'register': out = register_(d); break;
       case 'save': out = save_(d); break;
+      case 'publish': out = publish_(d); break;
       case 'upload': out = upload_(d); break;
+      case 'chapter': out = chapter_(d); break;
       case 'contact': out = contact_(d); break;
       default: out = { ok: false, error: 'unknown_action' };
     }
@@ -55,15 +58,27 @@ function doPost(e) {
 function setup() {
   table_('Profiles', PROFILE_COLS);
   table_('Invites', INVITE_COLS);
+  table_('Chapters', CHAPTER_COLS);
 }
 
-// Contoh: createInvites(5, 'Batch BNI Grow'). Kode muncul di tab Invites dan di Logs.
-function createInvites(n, note) {
+// Contoh: createChapter('grow', 'BNI GROW · Jakarta Barat')
+function createChapter(id, name) {
+  id = String(id || '').toLowerCase().trim();
+  if (!/^[a-z0-9-]{2,30}$/.test(id) || !name) throw new Error('id (huruf kecil/angka/minus) dan name wajib diisi');
+  var t = table_('Chapters', CHAPTER_COLS);
+  for (var i = 0; i < t.rows.length; i++) if (String(t.rows[i].id) === id) throw new Error('Chapter sudah ada: ' + id);
+  t.sh.appendRow(rowFrom_(t.head, { id: id, name: name }));
+}
+
+// Contoh: createInvites(5, 'Batch 1', 'grow'). Kode muncul di tab Invites dan di Logs.
+function createInvites(n, note, chapterId) {
+  chapterId = String(chapterId || '').toLowerCase().trim();
+  if (!chapterName_(chapterId)) throw new Error('Chapter belum ada. Jalankan createChapter dulu: ' + chapterId);
   var t = table_('Invites', INVITE_COLS);
   var made = [];
   for (var i = 0; i < (n || 1); i++) {
     var code = 'BG-' + randomCode_(6);
-    t.sh.appendRow([code, note || '', '', '']);
+    t.sh.appendRow(rowFrom_(t.head, { code: code, chapter_id: chapterId, note: note || '' }));
     made.push(code);
   }
   Logger.log(made.join('\n'));
@@ -71,6 +86,7 @@ function createInvites(n, note) {
 }
 
 // ===== HANDLER =====
+// Halaman publik hanya menampilkan versi yang sudah dipublish.
 function getProfile_(slug) {
   if (!/^[a-z0-9-]{2,30}$/.test(slug)) return { ok: false, error: 'not_found' };
   var cache = CacheService.getScriptCache();
@@ -78,19 +94,10 @@ function getProfile_(slug) {
   if (hit) return JSON.parse(hit);
   var row = findProfile_('slug', slug);
   if (!row || String(row.status || 'active') === 'blocked') return { ok: false, error: 'not_found' };
-  var out = { ok: true, slug: row.slug, name: row.name, data: JSON.parse(row.data || '{}') };
+  if (!row.published) return { ok: false, error: 'not_published' };
+  var out = { ok: true, slug: row.slug, name: row.name, data: JSON.parse(row.published) };
   try { cache.put('p:' + slug, JSON.stringify(out), 300); } catch (err) {}
   return out;
-}
-
-function getDirectory_() {
-  var t = table_('Profiles', PROFILE_COLS);
-  var list = [];
-  t.rows.forEach(function (r) {
-    if (!isTrue_(r.public) || String(r.status || 'active') === 'blocked') return;
-    list.push({ slug: r.slug, name: r.name, chapter: r.chapter, classification: r.classification, tagline: r.tagline });
-  });
-  return { ok: true, list: list };
 }
 
 function me_(d) {
@@ -99,7 +106,10 @@ function me_(d) {
   if (!row) return { ok: true, registered: false, email: email, registration: REGISTRATION };
   return {
     ok: true, registered: true, email: email, slug: row.slug, name: row.name,
-    public: isTrue_(row.public), status: String(row.status || 'active'),
+    chapter: row.chapter_id ? chapterName_(row.chapter_id) : '',
+    status: String(row.status || 'active'),
+    published: !!row.published, published_at: row.published_at ? String(row.published_at) : '',
+    pending: String(row.data || '') !== String(row.published || ''),
     data: JSON.parse(row.data || '{}')
   };
 }
@@ -113,35 +123,37 @@ function register_(d) {
   if (findProfile_('slug', slug)) return { ok: false, error: 'slug_taken' };
 
   var invites = table_('Invites', INVITE_COLS);
-  var inv = null;
+  var inv = null, cid = '';
   if (REGISTRATION !== 'open') {
     var code = String(d.invite || '').trim().toUpperCase();
     invites.rows.forEach(function (r) {
-      if (String(r.code).toUpperCase() === code && code && !r.used_by) inv = r;
+      if (code && String(r.code).toUpperCase() === code && !r.used_by) inv = r;
     });
     if (!inv) return { ok: false, error: 'bad_invite' };
+    cid = String(inv.chapter_id || '');
+    if (!chapterName_(cid)) return { ok: false, error: 'invite_no_chapter' };
   }
 
   var name = cleanStr_(d.name || '').trim().slice(0, 60);
-  var chapter = cleanStr_(d.chapter || '').trim().slice(0, 80);
   if (!name) return { ok: false, error: 'name_required' };
 
   var data = sanitizeData_(d.data || {});
   data.hero = data.hero || {};
   data.hero.name = name;
   data.bni = data.bni || {};
-  data.bni.chapter = chapter;
+  data.bni.chapter = cid ? chapterName_(cid) : '';
 
   var json = JSON.stringify(data);
   if (json.length > MAX_JSON) return { ok: false, error: 'too_large' };
 
   var tab = contactsTabName_(name, slug);
   sheet_(tab, CONTACT_COLS);
+
   var now = new Date();
   var profiles = table_('Profiles', PROFILE_COLS);
-  profiles.sh.appendRow(rowFrom_(PROFILE_COLS, {
-    slug: slug, email: email, name: cell_(name), chapter: cell_(chapter), classification: '', tagline: '',
-    contacts_tab: tab, public: false, status: 'active', created_at: now, updated_at: now, data: json
+  profiles.sh.appendRow(rowFrom_(profiles.head, {
+    slug: slug, email: email, name: cell_(name), chapter_id: cid, chapter: cell_(data.bni.chapter),
+    contacts_tab: tab, public: '', status: 'active', created_at: now, updated_at: now, data: json, published: ''
   }));
   if (inv) {
     setCell_(invites, inv._row, 'used_by', email);
@@ -150,25 +162,45 @@ function register_(d) {
   return { ok: true, slug: slug };
 }
 
+// Simpan draf. Halaman publik tidak berubah sampai publish.
 function save_(d) {
   var email = verify_(d.idToken);
   var row = findProfile_('email', email);
   if (!row) return { ok: false, error: 'not_registered' };
   if (String(row.status || 'active') === 'blocked') return { ok: false, error: 'blocked' };
-  var data = sanitizeData_(d.data);
+  var json = JSON.stringify(prepare_(d.data, row));
+  if (json.length > MAX_JSON) return { ok: false, error: 'too_large' };
+  var t = table_('Profiles', PROFILE_COLS);
+  setCell_(t, row._row, 'updated_at', new Date());
+  setCell_(t, row._row, 'data', json);
+  return { ok: true, pending: json !== String(row.published || '') };
+}
+
+// Simpan lalu terbitkan: versi lama di halaman publik diganti, dan data untuk dashboard chapter diperbarui.
+function publish_(d) {
+  var email = verify_(d.idToken);
+  var row = findProfile_('email', email);
+  if (!row) return { ok: false, error: 'not_registered' };
+  if (String(row.status || 'active') === 'blocked') return { ok: false, error: 'blocked' };
+  var data = prepare_(d.data, row);
   var json = JSON.stringify(data);
   if (json.length > MAX_JSON) return { ok: false, error: 'too_large' };
 
   var t = table_('Profiles', PROFILE_COLS);
-  var hero = data.hero || {}, bni = data.bni || {};
+  var hero = data.hero || {}, bni = data.bni || {}, now = new Date();
   setCell_(t, row._row, 'name', cell_(String(hero.name || row.name).slice(0, 60)));
   setCell_(t, row._row, 'chapter', cell_(String(bni.chapter || '').slice(0, 80)));
+  setCell_(t, row._row, 'role', cell_(String(hero.role_id || hero.role_en || '').replace(/<[^>]*>/g, '').slice(0, 100)));
   setCell_(t, row._row, 'classification', cell_(String(bni.klasifikasi_id || bni.klasifikasi_en || '').slice(0, 120)));
   setCell_(t, row._row, 'tagline', cell_(String(hero.tagline_id || hero.tagline_en || '').replace(/<[^>]*>/g, '').slice(0, 160)));
-  setCell_(t, row._row, 'updated_at', new Date());
+  setCell_(t, row._row, 'photo', (data.images && (data.images.cover || data.images.hero)) || '');
+  setCell_(t, row._row, 'updated_at', now);
+  setCell_(t, row._row, 'published_at', now);
   setCell_(t, row._row, 'data', json);
+  setCell_(t, row._row, 'published', json);
+  if (AUTO_APPROVE && String(row.public) === '') setCell_(t, row._row, 'public', true);
   CacheService.getScriptCache().remove('p:' + row.slug);
-  return { ok: true };
+  return { ok: true, slug: row.slug };
 }
 
 function upload_(d) {
@@ -193,6 +225,24 @@ function upload_(d) {
   return { ok: true, url: 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w1200' };
 }
 
+// Dashboard chapter: hanya anggota terdaftar yang bisa melihat, dan hanya anggota chapter yang sama.
+function chapter_(d) {
+  var email = verify_(d.idToken);
+  var me = findProfile_('email', email);
+  if (!me) return { ok: true, registered: false, email: email };
+  if (String(me.status || 'active') === 'blocked') return { ok: false, error: 'blocked' };
+  var cid = String(me.chapter_id || '');
+  if (!cid) return { ok: false, error: 'no_chapter' };
+  var t = table_('Profiles', PROFILE_COLS), members = [];
+  t.rows.forEach(function (r) {
+    if (String(r.chapter_id) !== cid || !isTrue_(r.public) || !r.published) return;
+    if (String(r.status || 'active') === 'blocked') return;
+    members.push({ slug: r.slug, name: r.name, role: r.role, classification: r.classification, tagline: r.tagline, photo: r.photo });
+  });
+  members.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+  return { ok: true, registered: true, self: me.slug, chapter: { id: cid, name: chapterName_(cid) }, members: members };
+}
+
 // Dari form WhatsApp di halaman profil seseorang: tulis ke tab Contacts miliknya.
 function contact_(d) {
   var slug = String(d.owner || '').toLowerCase();
@@ -213,6 +263,14 @@ function appendContact_(sh, d) {
     new Date(), cell_(d.name), cell_(d.chapter), cell_(d.classification),
     cell_(d.lang), cell_(d.source), cell_(d.page)
   ]);
+}
+
+// Bersihkan data dan paksa nama chapter sesuai keanggotaan resmi.
+function prepare_(raw, row) {
+  var data = sanitizeData_(raw);
+  data.bni = data.bni || {};
+  if (row.chapter_id) data.bni.chapter = chapterName_(row.chapter_id) || data.bni.chapter || '';
+  return data;
 }
 
 // ===== AUTH =====
@@ -288,14 +346,21 @@ function sheet_(name, headers) {
   return sh;
 }
 
+// Membaca tab sebagai daftar baris. Kolom yang belum ada di sheet lama ditambahkan otomatis di kanan.
 function table_(name, headers) {
   var sh = sheet_(name, headers);
   var vals = sh.getDataRange().getValues();
-  var head = vals[0] || headers;
+  var head = (vals[0] || headers).map(String);
+  var missing = headers.filter(function (h) { return head.indexOf(h) < 0; });
+  if (missing.length) {
+    head = head.concat(missing);
+    sh.getRange(1, 1, 1, head.length).setValues([head]);
+    vals = sh.getDataRange().getValues();
+  }
   var rows = [];
   for (var i = 1; i < vals.length; i++) {
     var o = { _row: i + 1 };
-    for (var j = 0; j < head.length; j++) o[head[j]] = vals[i][j];
+    for (var j = 0; j < head.length; j++) o[head[j]] = vals[i][j] == null ? '' : vals[i][j];
     rows.push(o);
   }
   return { sh: sh, head: head, rows: rows };
@@ -315,6 +380,14 @@ function findProfile_(col, val) {
     if (String(t.rows[i][col]).toLowerCase() === String(val).toLowerCase()) return t.rows[i];
   }
   return null;
+}
+
+function chapterName_(id) {
+  id = String(id || '').toLowerCase();
+  if (!id) return '';
+  var t = table_('Chapters', CHAPTER_COLS);
+  for (var i = 0; i < t.rows.length; i++) if (String(t.rows[i].id).toLowerCase() === id) return String(t.rows[i].name);
+  return '';
 }
 
 function contactsTabName_(name, slug) {

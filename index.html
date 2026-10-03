@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<base href="/">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dedy Dahlan Bio Gains - BNI Grow</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%23CF142B%22%2F%3E%3Cg%20transform%3D%22translate%284%204%29%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m11%2017%202%202a1%201%200%201%200%203-3%22%2F%3E%3Cpath%20d%3D%22m14%2014%202.5%202.5a1%201%200%201%200%203-3l-3.88-3.88a3%203%200%200%200-4.24%200l-.88.88a1%201%200%201%201-3-3l2.81-2.81a5.79%205.79%200%200%201%207.06-.87l.47.28a2%202%200%200%200%201.42.25L21%204%22%2F%3E%3Cpath%20d%3D%22m21%203%201%2011h-2%22%2F%3E%3Cpath%20d%3D%22M3%203%202%2014l6.5%206.5a1%201%200%201%200%203-3%22%2F%3E%3Cpath%20d%3D%22M3%204h8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
@@ -281,8 +282,11 @@
 <script src="data.js"></script>
 <script>
 if(typeof DATA==='undefined'){document.addEventListener('DOMContentLoaded',function(){document.getElementById('infoarea').innerHTML='<p style="padding:20px;color:#a00;font-size:13px">data.js tidak ditemukan. Pastikan data.js ada di folder yang sama dengan index.html.</p>';});}
-var SLUG=(new URLSearchParams(location.search).get('u')||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,30), KS=SLUG?('_'+SLUG):'';
-if(SLUG)document.documentElement.classList.add('loading');
+// Slug dari path (/miky) atau ?u=miky. ?preview=1 menampilkan draf dari studio tanpa menyentuh server.
+var QS=new URLSearchParams(location.search), PREVIEW=QS.get('preview')==='1';
+var SLUG=PREVIEW?'':(QS.get('u')||(location.pathname.match(/^\/([a-z0-9-]{2,30})\/?$/)||[])[1]||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,30);
+var KS=PREVIEW?'_preview':(SLUG?('_'+SLUG):'');
+if(SLUG||PREVIEW)document.documentElement.classList.add('loading');
 var lang=(typeof DATA!=='undefined'&&DATA.lang_default)||'id', cur='bni', curTier='bread';
 function T(id,en){var v=lang==='id'?id:en,o=lang==='id'?en:id;var empty=(v==null||v===''||(Array.isArray(v)&&v.length===0));return empty?o:v;}
 var read=new Set();
@@ -466,7 +470,7 @@ function waMe(src){
 // Isi dengan URL Web App dari Google Apps Script (lihat apps-script.gs). Kosong = tidak kirim ke sheet.
 var SHEET_URL=(window.BG&&BG.api)||'';
 function logToSheet(d){
- if(!SHEET_URL||!(d.name||d.chapter||d.classification))return;
+ if(PREVIEW||!SHEET_URL||!(d.name||d.chapter||d.classification))return;
  try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).catch(function(){});}catch(_){}
 }
 function waClose(){var m=document.getElementById('wamodal');if(m)m.classList.remove('show');}
@@ -567,14 +571,26 @@ function showFatal(msg){
 function loadRemote(){
  if(!window.BG||!BG.api){showFatal('Konfigurasi belum lengkap.');return;}
  fetch(BG.api+'?action=profile&u='+encodeURIComponent(SLUG)).then(function(r){return r.json();}).then(function(res){
-  if(!res||!res.ok){showFatal('Profil <b>'+SLUG+'</b> tidak ditemukan.');return;}
+  if(!res||!res.ok){showFatal(res&&res.error==='not_published'?'Profil <b>'+SLUG+'</b> belum dipublikasikan.':'Profil <b>'+SLUG+'</b> tidak ditemukan.');return;}
+  if(QS.get('u')&&location.pathname==='/'){try{history.replaceState(null,'','/'+SLUG);}catch(_){}}
   window.DATA=mergeT(window.BG_TEMPLATE,cleanProfile(res.data));
   lang=DATA.lang_default==='en'?'en':'id';
   document.getElementById('lid').classList.toggle('on',lang==='id');document.getElementById('len').classList.toggle('on',lang==='en');document.documentElement.lang=lang;
   init();
  }).catch(function(){showFatal('Gagal memuat profil. Coba muat ulang halaman.');});
 }
-if(SLUG)loadRemote();else if(typeof DATA!=='undefined')init();
+function loadPreview(){
+ var raw=null;try{raw=JSON.parse(localStorage.getItem('bg_preview'));}catch(_){}
+ if(!raw){showFatal('Tidak ada draf untuk dipratinjau. Buka dari tombol Pratinjau di studio.');return;}
+ window.DATA=mergeT(window.BG_TEMPLATE,cleanProfile(raw));
+ lang=DATA.lang_default==='en'?'en':'id';
+ document.getElementById('lid').classList.toggle('on',lang==='id');document.getElementById('len').classList.toggle('on',lang==='en');document.documentElement.lang=lang;
+ var b=document.createElement('div');b.textContent='Pratinjau draf, belum dipublish';
+ b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:300;background:#191919;color:#fff;font:700 12px Montserrat,sans-serif;text-align:center;padding:6px';
+ document.body.appendChild(b);
+ init();
+}
+if(PREVIEW)loadPreview();else if(SLUG)loadRemote();else if(typeof DATA!=='undefined')init();
 </script>
 </body>
 </html>
