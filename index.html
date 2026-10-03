@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dedy Dahlan Bio Gains - BNI Grow</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%23CF142B%22%2F%3E%3Cg%20transform%3D%22translate%284%204%29%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m11%2017%202%202a1%201%200%201%200%203-3%22%2F%3E%3Cpath%20d%3D%22m14%2014%202.5%202.5a1%201%200%201%200%203-3l-3.88-3.88a3%203%200%200%200-4.24%200l-.88.88a1%201%200%201%201-3-3l2.81-2.81a5.79%205.79%200%200%201%207.06-.87l.47.28a2%202%200%200%200%201.42.25L21%204%22%2F%3E%3Cpath%20d%3D%22m21%203%201%2011h-2%22%2F%3E%3Cpath%20d%3D%22M3%203%202%2014l6.5%206.5a1%201%200%201%200%203-3%22%2F%3E%3Cpath%20d%3D%22M3%204h8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<script>window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
 <meta name="theme-color" content="#CF142B">
@@ -60,15 +61,19 @@
   .sharemenu button:active,.sharemenu button:hover{background:#f3f3f4}
   .sharemenu svg{width:18px;height:18px;color:var(--orange);flex-shrink:0}
   .sharemenu .sub{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:1px}
-  .savehint{position:fixed;inset:0;z-index:280;pointer-events:none;transition:opacity .2s}
+  .savehint{position:fixed;inset:0;z-index:280;pointer-events:none;transition:opacity .25s}
   .savehint.out{opacity:0}
-  .savering{position:fixed;border-radius:50%;border:3px solid var(--orange);box-shadow:0 0 0 0 rgba(207,20,43,.45);animation:savering 1.3s ease-out infinite}
-  .savebub{position:fixed;background:#1a1a1a;color:#fff;font-weight:700;font-size:13.5px;line-height:1.3;padding:11px 15px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap;animation:savein .3s ease}
-  .savearr{position:fixed;width:12px;height:12px;background:#1a1a1a;transform:rotate(45deg);border-radius:2px;animation:savein .3s ease}
-  @keyframes savering{0%{box-shadow:0 0 0 0 rgba(207,20,43,.5)}100%{box-shadow:0 0 0 14px rgba(207,20,43,0)}}
-  @keyframes savein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-  .savearr{animation-name:savein2}
-  @keyframes savein2{from{opacity:0}to{opacity:1}}
+  .savehint .hveil{position:absolute;inset:0;background:rgba(255,255,255,.40);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:hfade .5s ease both}
+  .savehint .hring{position:absolute;border-radius:50%;border:2px solid rgba(207,20,43,.8);animation:hring 1.8s ease-out infinite}
+  .savehint .hring.two{animation-delay:.9s}
+  .savehint .htext{position:absolute;text-align:center;font-weight:400;font-size:15px;line-height:1.35;color:#2a2a30;text-shadow:0 0 6px rgba(255,255,255,.95),0 0 12px rgba(255,255,255,.8);animation:htin .6s ease .15s both}
+  .savehint .htext small{display:block;font-weight:400;font-size:12px;color:#5f5f68;margin-top:3px}
+  .savehint .harr{position:absolute;width:22px;height:22px;color:var(--orange);animation:harr 1.2s ease-in-out infinite}
+  @keyframes hfade{from{opacity:0}to{opacity:1}}
+  @keyframes hring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+  @keyframes htin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes harr{0%,100%{transform:translateY(2px)}50%{transform:translateY(-4px)}}
+  @media (prefers-reduced-motion:reduce){.savehint .hring,.savehint .harr{animation:none}}
   .insthelp{position:fixed;inset:0;z-index:260;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
   .insthelp.show{display:flex}
   .insthelp .box{background:#fff;width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:20px 20px calc(22px + env(safe-area-inset-bottom));font-size:14px;line-height:1.55}
@@ -501,7 +506,7 @@ function waSend(){
  waClose();
 }
 // ----- Share / Save (install) -----
-var deferredInstall=null;
+var deferredInstall=window.__bip||null;
 var IS_IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function isInstalled(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;});
@@ -542,11 +547,15 @@ function placeSaveHint(){
  if(!hintEl)return;
  var btn=document.getElementById('sharebtn');if(!btn)return;
  var r=btn.getBoundingClientRect(),vw=document.documentElement.clientWidth;
- var ring=hintEl.querySelector('.savering'),bub=hintEl.querySelector('.savebub'),arr=hintEl.querySelector('.savearr');
- ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px';
- var bw=bub.offsetWidth,left=Math.max(8,Math.min(r.right-bw,vw-bw-8));
- bub.style.left=left+'px';bub.style.top=(r.bottom+16)+'px';
- arr.style.left=Math.max(left+14,Math.min(r.left+r.width/2-6,left+bw-26))+'px';arr.style.top=(r.bottom+10)+'px';
+ var cx=r.left+r.width/2,cy=r.top+r.height/2;
+ // lubang pada kabut tepat di tombol share, tepinya lembut
+ var m='radial-gradient(circle at '+cx+'px '+cy+'px,transparent '+(r.width*0.7)+'px,#000 '+(r.width*2)+'px)';
+ var veil=hintEl.querySelector('.hveil');veil.style.webkitMaskImage=m;veil.style.maskImage=m;
+ hintEl.querySelectorAll('.hring').forEach(function(g){var d=r.width+8;g.style.left=(cx-d/2)+'px';g.style.top=(cy-d/2)+'px';g.style.width=d+'px';g.style.height=d+'px';});
+ var arr=hintEl.querySelector('.harr'),tx=hintEl.querySelector('.htext');
+ arr.style.left=(cx-11)+'px';arr.style.top=(r.bottom+12)+'px';
+ var w=tx.offsetWidth,left=Math.max(8,Math.min(cx-w/2,vw-w-8));
+ tx.style.left=left+'px';tx.style.top=(r.bottom+42)+'px';
 }
 function showSaveHint(){
  var btn=document.getElementById('sharebtn');
@@ -555,7 +564,9 @@ function showSaveHint(){
  var wm=document.getElementById('wamodal');if(wm&&wm.classList.contains('show'))return;
  try{localStorage.setItem('dd_hint_save','1');}catch(_){}
  hintEl=document.createElement('div');hintEl.id='savehint';hintEl.className='savehint';
- hintEl.innerHTML='<div class="savering"></div><div class="savearr"></div><div class="savebub">'+T('Simpan untuk dibaca nanti','Save to read later')+'</div>';
+ hintEl.innerHTML='<div class="hveil"></div><div class="hring"></div><div class="hring two"></div>'
+  +'<svg class="harr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>'
+  +'<div class="htext">'+T('Simpan untuk dibaca nanti','Save to read later')+'<small>'+T('Ketuk tombol ini','Tap this button')+'</small></div>';
  document.body.appendChild(hintEl);
  placeSaveHint();window.addEventListener('resize',placeSaveHint);
  // pasang pendengar sedikit terlambat supaya tap yang menutup form tidak langsung menghapusnya
