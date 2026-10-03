@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dedy Dahlan Bio Gains - BNI Grow</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%23CF142B%22%2F%3E%3Cg%20transform%3D%22translate%284%204%29%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m11%2017%202%202a1%201%200%201%200%203-3%22%2F%3E%3Cpath%20d%3D%22m14%2014%202.5%202.5a1%201%200%201%200%203-3l-3.88-3.88a3%203%200%200%200-4.24%200l-.88.88a1%201%200%201%201-3-3l2.81-2.81a5.79%205.79%200%200%201%207.06-.87l.47.28a2%202%200%200%200%201.42.25L21%204%22%2F%3E%3Cpath%20d%3D%22m21%203%201%2011h-2%22%2F%3E%3Cpath%20d%3D%22M3%203%202%2014l6.5%206.5a1%201%200%201%200%203-3%22%2F%3E%3Cpath%20d%3D%22M3%204h8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<script>window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
 <meta name="theme-color" content="#CF142B">
@@ -60,6 +61,21 @@
   .sharemenu button:active,.sharemenu button:hover{background:#f3f3f4}
   .sharemenu svg{width:18px;height:18px;color:var(--orange);flex-shrink:0}
   .sharemenu .sub{display:block;font-weight:500;font-size:11px;color:var(--muted);margin-top:1px}
+  .savehint{position:fixed;inset:0;z-index:280;pointer-events:none;transition:opacity .25s}
+  .savehint.out{opacity:0}
+  .savehint .hveil{position:absolute;inset:0;background:rgba(255,255,255,.40);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:hfade .5s ease both}
+  .savehint .hring{position:absolute;border-radius:50%;border:2px solid rgba(207,20,43,.8);animation:hring 1.8s ease-out infinite}
+  .savehint .hring.two{animation-delay:.9s}
+  .savehint .hbwrap{position:absolute;width:max-content;max-width:min(176px,calc(100vw - 24px));filter:drop-shadow(0 8px 18px rgba(20,20,30,.22));animation:hin .5s cubic-bezier(.2,.9,.3,1.2) .15s both,hbob 2.6s ease-in-out .65s infinite}
+  .savehint .hbub{position:relative;display:flex;align-items:center;gap:9px;background:#fff;color:#2a2a30;font-weight:400;font-size:15px;line-height:1.4;text-align:left;padding:11px 15px 11px 13px;border-radius:16px}
+  .savehint .hbub span{text-wrap:balance}
+  .savehint .hico{width:20px;height:20px;flex-shrink:0;color:var(--orange)}
+  .savehint .htail{position:absolute;top:-6px;width:14px;height:14px;background:#fff;transform:rotate(45deg);border-radius:3px 0 0 0}
+  @keyframes hfade{from{opacity:0}to{opacity:1}}
+  @keyframes hring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+  @keyframes hin{from{opacity:0;transform:translateY(-8px) scale(.92)}to{opacity:1;transform:none}}
+  @keyframes hbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @media (prefers-reduced-motion:reduce){.savehint .hring,.savehint .hbwrap{animation:none}}
   .insthelp{position:fixed;inset:0;z-index:260;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
   .insthelp.show{display:flex}
   .insthelp .box{background:#fff;width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:20px 20px calc(22px + env(safe-area-inset-bottom));font-size:14px;line-height:1.55}
@@ -453,6 +469,7 @@ function showReferbar(on){var pb=document.getElementById('progblock'),rb=documen
 function enterApp(){var c=document.getElementById('cover');if(c)c.classList.add('hidden');
  var seen=false;try{seen=localStorage.getItem('dd_wa_seen')==='1';}catch(_){}
  if(!seen){try{localStorage.setItem('dd_wa_seen','1');}catch(_){}setTimeout(function(){waMe('auto');},450);}
+ else scheduleSaveHint();
 }
 function fitCoverName(){var el=document.getElementById('covername');if(!el)return;var cover=el.parentNode;var cs=getComputedStyle(cover);var avail=cover.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);if(avail<=0)return;el.style.fontSize='100px';var natural=el.scrollWidth||el.getBoundingClientRect().width;if(!natural)return;var size=100*(avail*0.99)/natural;size=Math.max(30,Math.min(size,98));el.style.fontSize=size+'px';}
 window.addEventListener('resize',fitCoverName);
@@ -478,7 +495,7 @@ function logToSheet(d){
  if(!SHEET_URL||!(d.name||d.chapter||d.classification))return;
  try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).catch(function(){});}catch(_){}
 }
-function waClose(){var m=document.getElementById('wamodal');if(m)m.classList.remove('show');}
+function waClose(){var m=document.getElementById('wamodal');var wasOpen=m&&m.classList.contains('show');if(m)m.classList.remove('show');if(wasOpen)scheduleSaveHint();}
 function waSend(){
  var wa=(DATA.contact&&DATA.contact.wa)?DATA.contact.wa:'';
  var g=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
@@ -489,10 +506,9 @@ function waSend(){
  logToSheet({name:name,chapter:chap,classification:cls,lang:lang,source:window.__waSrc||'button',page:location.href.split('#')[0]});
  window.open('https://wa.me/'+wa+(wa?('?text='+encodeURIComponent(msg)):''),'_blank');
  waClose();
- afterSendInstall();
 }
 // ----- Share / Save (install) -----
-var deferredInstall=null;
+var deferredInstall=window.__bip||null;
 var IS_IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function isInstalled(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;});
@@ -520,30 +536,50 @@ function showInstallHelp(){
  m.classList.add('show');
 }
 
-// Aksi ketiga setelah kirim WhatsApp. Browser hanya mengizinkan prompt pasang dari tap pengguna,
-// dan WhatsApp sudah memakai tap itu. Jika prompt ditolak, tawarkan sekali saat pengguna kembali ke halaman ini.
-var offerPending=false;
-function afterSendInstall(){
- if(isInstalled())return;
- var mobile=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
- if(deferredInstall){
-  installApp().then(function(r){if(r==='refused'&&mobile)offerPending=true;});
- }else if(mobile)offerPending=true;
+// ----- Petunjuk "Simpan untuk dibaca nanti" -----
+// Muncul sekali per perangkat setelah form WhatsApp ditutup (kirim atau batal), atau saat masuk app
+// kalau form tidak dibuka otomatis. Hilang saat pengguna menyentuh bagian mana pun dari layar.
+var hintEl=null,hintTimer=null;
+function hintSeen(){try{return localStorage.getItem('dd_hint_save')==='1';}catch(_){return false;}}
+function scheduleSaveHint(){
+ if(hintSeen()||hintEl||hintTimer)return;
+ hintTimer=setTimeout(function(){hintTimer=null;showSaveHint();},500);
 }
-function offerSeen(){try{return localStorage.getItem('dd_inst_offer')==='1';}catch(_){return false;}}
-document.addEventListener('visibilitychange',function(){
- if(document.visibilityState!=='visible'||!offerPending||isInstalled()||offerSeen())return;
- offerPending=false;
- try{localStorage.setItem('dd_inst_offer','1');}catch(_){}
- showInstallOffer();
-});
-function showInstallOffer(){
- var m=document.getElementById('insthelp');
- if(!m){m=document.createElement('div');m.id='insthelp';m.className='insthelp';m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('show');});document.body.appendChild(m);}
- m.innerHTML='<div class="box"><h3>'+T('Simpan My Biogains di HP Anda?','Save My Biogains on your phone?')+'</h3><div>'+T('Supaya mudah dibuka lagi kapan saja, tanpa mencari link.','So you can open it again any time, without looking for the link.')+'</div>'
-  +'<div style="height:14px"></div><button onclick="document.getElementById(\'insthelp\').classList.remove(\'show\');installApp()">'+T('Simpan di HP','Save to phone')+'</button>'
-  +'<button style="background:none;color:#6E6E6E;margin-top:4px" onclick="document.getElementById(\'insthelp\').classList.remove(\'show\')">'+T('Nanti saja','Not now')+'</button></div>';
- m.classList.add('show');
+function placeSaveHint(){
+ if(!hintEl)return;
+ var btn=document.getElementById('sharebtn');if(!btn)return;
+ var r=btn.getBoundingClientRect(),vw=document.documentElement.clientWidth;
+ var cx=r.left+r.width/2,cy=r.top+r.height/2;
+ // lubang pada kabut tepat di tombol share, tepinya lembut
+ var m='radial-gradient(circle at '+cx+'px '+cy+'px,transparent '+(r.width*0.7)+'px,#000 '+(r.width*2)+'px)';
+ var veil=hintEl.querySelector('.hveil');veil.style.webkitMaskImage=m;veil.style.maskImage=m;
+ hintEl.querySelectorAll('.hring').forEach(function(g){var d=r.width+8;g.style.left=(cx-d/2)+'px';g.style.top=(cy-d/2)+'px';g.style.width=d+'px';g.style.height=d+'px';});
+ var wrap=hintEl.querySelector('.hbwrap'),tail=hintEl.querySelector('.htail');
+ var w=wrap.offsetWidth,left=Math.max(8,Math.min(cx-w/2,vw-w-8));
+ wrap.style.left=left+'px';wrap.style.top=(r.bottom+16)+'px';
+ tail.style.left=Math.max(14,Math.min(cx-left-7,w-28))+'px';
+}
+function showSaveHint(){
+ var btn=document.getElementById('sharebtn');
+ if(!btn||hintSeen()||hintEl)return;
+ var cover=document.getElementById('cover');if(cover&&!cover.classList.contains('hidden'))return;
+ var wm=document.getElementById('wamodal');if(wm&&wm.classList.contains('show'))return;
+ try{localStorage.setItem('dd_hint_save','1');}catch(_){}
+ hintEl=document.createElement('div');hintEl.id='savehint';hintEl.className='savehint';
+ hintEl.innerHTML='<div class="hveil"></div><div class="hring"></div><div class="hring two"></div>'
+  +'<div class="hbwrap"><div class="htail"></div><div class="hbub"><svg class="hico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span>Save to read later</span></div></div>';
+ document.body.appendChild(hintEl);
+ placeSaveHint();window.addEventListener('resize',placeSaveHint);
+ // pasang pendengar sedikit terlambat supaya tap yang menutup form tidak langsung menghapusnya
+ setTimeout(function(){
+  ['pointerdown','touchstart','mousedown','keydown'].forEach(function(ev){document.addEventListener(ev,hideSaveHint,true);});
+ },600);
+}
+function hideSaveHint(){
+ if(!hintEl)return;
+ ['pointerdown','touchstart','mousedown','keydown'].forEach(function(ev){document.removeEventListener(ev,hideSaveHint,true);});
+ window.removeEventListener('resize',placeSaveHint);
+ var el=hintEl;hintEl=null;el.classList.add('out');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},220);
 }
 
 function shareMenu(btn){
