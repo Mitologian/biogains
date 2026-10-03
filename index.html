@@ -66,8 +66,10 @@
   .savehint .hveil{position:absolute;inset:0;background:rgba(255,255,255,.40);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:hfade .5s ease both}
   .savehint .hring{position:absolute;border-radius:50%;border:2px solid rgba(207,20,43,.8);animation:hring 1.8s ease-out infinite}
   .savehint .hring.two{animation-delay:.9s}
-  .savehint .hbwrap{position:absolute;width:max-content;max-width:min(168px,calc(100vw - 24px));filter:drop-shadow(0 8px 18px rgba(20,20,30,.22));animation:hin .5s cubic-bezier(.2,.9,.3,1.2) .15s both,hbob 2.6s ease-in-out .65s infinite}
-  .savehint .hbub{position:relative;background:#fff;color:#2a2a30;font-weight:400;font-size:15px;line-height:1.4;text-align:center;padding:11px 16px;border-radius:16px;text-wrap:balance}
+  .savehint .hbwrap{position:absolute;width:max-content;max-width:min(176px,calc(100vw - 24px));filter:drop-shadow(0 8px 18px rgba(20,20,30,.22));animation:hin .5s cubic-bezier(.2,.9,.3,1.2) .15s both,hbob 2.6s ease-in-out .65s infinite}
+  .savehint .hbub{position:relative;display:flex;align-items:center;gap:9px;background:#fff;color:#2a2a30;font-weight:400;font-size:15px;line-height:1.4;text-align:left;padding:11px 15px 11px 13px;border-radius:16px}
+  .savehint .hbub span{text-wrap:balance}
+  .savehint .hico{width:20px;height:20px;flex-shrink:0;color:var(--orange)}
   .savehint .htail{position:absolute;top:-6px;width:14px;height:14px;background:#fff;transform:rotate(45deg);border-radius:3px 0 0 0}
   @keyframes hfade{from{opacity:0}to{opacity:1}}
   @keyframes hring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(2.4);opacity:0}}
@@ -565,7 +567,7 @@ function showSaveHint(){
  try{localStorage.setItem('dd_hint_save','1');}catch(_){}
  hintEl=document.createElement('div');hintEl.id='savehint';hintEl.className='savehint';
  hintEl.innerHTML='<div class="hveil"></div><div class="hring"></div><div class="hring two"></div>'
-  +'<div class="hbwrap"><div class="htail"></div><div class="hbub">'+T('Simpan untuk dibaca nanti','Save to read later')+'</div></div>';
+  +'<div class="hbwrap"><div class="htail"></div><div class="hbub"><svg class="hico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span>Save to read later</span></div></div>';
  document.body.appendChild(hintEl);
  placeSaveHint();window.addEventListener('resize',placeSaveHint);
  // pasang pendengar sedikit terlambat supaya tap yang menutup form tidak langsung menghapusnya
